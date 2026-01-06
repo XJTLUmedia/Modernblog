@@ -40,7 +40,7 @@ src/
 ├── lib/          # AI service integrations, Prisma client, and utility logic
 ├── schemas/      # The shared "Truth": Zod models for your data and AI prompts
 └── hooks/        # Reactive logic for a seamless user experience
-
+```
 ---
 
 ## Installation and Setup

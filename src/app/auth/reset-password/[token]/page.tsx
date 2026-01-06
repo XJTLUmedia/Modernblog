@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { ArrowLeft, Loader2, CheckCircle, Eye, EyeOff, KeyRound, ArrowRight, ShieldCheck, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -11,13 +12,9 @@ import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { motion, AnimatePresence } from 'framer-motion'
 
-interface PageProps {
-  params: {
-    token: string
-  }
-}
-
-export default function ResetPasswordPage({ params }: PageProps) {
+export default function ResetPasswordPage() {
+  const params = useParams()
+  // const token = params?.token as string // Already implicitly handled by params usage below
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -27,10 +24,11 @@ export default function ResetPasswordPage({ params }: PageProps) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!params.token || params.token === 'undefined') {
+    // Check if token exists in params
+    if (!params?.token) {
       setError('Invalid or missing reset token')
     }
-  }, [params.token])
+  }, [params])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

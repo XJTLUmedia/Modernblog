@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 // Get a single project by slug
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params
+    const { slug } = await params
 
     // Normalize slug for query
     const normalizedSlug = slug.toLowerCase().trim()

@@ -1,0 +1,335 @@
+'use client'
+
+import Link from 'next/link'
+import { BookOpen, Sprout, Hammer, LayoutDashboard, Plus, Edit, Trash2, LogOut, Settings, ArrowRight, Github, Twitter, Menu, X, User } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { useState, useEffect } from 'react'
+
+export default function AdminDashboard() {
+  const [user, setUser] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    // Check authentication from cookies or local storage
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/check')
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+          setIsAdmin(data.isAdmin)
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  // If not logged in or not admin, show redirect
+  if (!user || !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>
+              You must be logged in as an administrator to access this page.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/auth/login" className="block">
+              <Button>
+                Go to Login
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 w-full border-b">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src="/logo.svg" alt="Logo" className="h-8 w-8" />
+              <Link href="/" className="text-lg font-bold">
+                Modern Blog
+              </Link>
+            </div>
+
+            <nav className="flex items-center gap-6">
+              <Link href="/" className="text-sm font-medium">
+                Home
+              </Link>
+              <Link href="/blog" className="text-sm font-medium">
+                Blog
+              </Link>
+              <Link href="/garden" className="text-sm font-medium">
+                Garden
+              </Link>
+              <Link href="/forge" className="text-sm font-medium">
+                Projects
+              </Link>
+              <Link href="/hub" className="text-sm font-medium text-primary">
+                Hub
+              </Link>
+              <Link href="/auth/login" className="text-sm font-medium">
+                Logout
+              </Link>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+              Admin Dashboard
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              Welcome back, {user?.name || 'Admin'}!
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Blog Posts</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">12</div>
+                <p className="text-sm text-muted-foreground">Published posts</p>
+                <Link href="/admin/posts">
+                  <Button variant="ghost" size="sm" className="w-full mt-2 gap-2">
+                    <Settings className="h-4 w-4" />
+                    Manage Posts
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Sprout className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Garden Notes</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">8</div>
+                <p className="text-sm text-muted-foreground">Notes in your garden</p>
+                <Link href="/admin/garden">
+                  <Button variant="ghost" size="sm" className="w-full mt-2 gap-2">
+                    <Settings className="h-4 w-4" />
+                    Manage Notes
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Hammer className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Projects</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">5</div>
+                <p className="text-sm text-muted-foreground">Projects in the forge</p>
+                <Link href="/admin/projects">
+                  <Button variant="ghost" size="sm" className="w-full mt-2 gap-2">
+                    <Settings className="h-4 w-4" />
+                    Manage Projects
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start gap-4 pb-4 border-b">
+                  <Badge variant="secondary">New Post</Badge>
+                  <div className="flex-1">
+                    <div className="font-semibold">Building Modern Web Applications with Next.js 15</div>
+                    <div className="text-sm text-muted-foreground">
+                      Published 2 hours ago
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 pb-4 border-b">
+                  <Badge className="bg-emerald-600/10 text-emerald-600">New Note</Badge>
+                  <div className="flex-1">
+                    <div className="font-semibold">Understanding TypeScript Generics</div>
+                    <div className="text-sm text-muted-foreground">
+                      Updated 1 hour ago
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <Badge className="bg-purple-600/10 text-purple-600">New Project</Badge>
+                  <div className="flex-1">
+                    <div className="font-semibold">AI Task Manager</div>
+                    <div className="text-sm text-muted-foreground">
+                      Created 3 hours ago
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Link href="/admin/posts/new" className="block">
+                  <Button className="h-auto gap-2">
+                    <Plus className="h-5 w-5" />
+                    <span className="flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Create New Blog Post
+                    </span>
+                  </Button>
+                </Link>
+                <Link href="/admin/garden/new" className="block">
+                  <Button variant="outline" className="h-auto gap-2">
+                    <Plus className="h-5 w-5" />
+                    <span className="flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Create New Note
+                    </span>
+                  </Button>
+                </Link>
+                <Link href="/admin/projects/new" className="block">
+                  <Button variant="outline" className="h-auto gap-2">
+                    <Plus className="h-5 w-5" />
+                    <span className="flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Create New Project
+                    </span>
+                  </Button>
+                </Link>
+                <Link href="/admin/settings" className="block">
+                  <Button variant="secondary" className="h-auto gap-2">
+                    <Settings className="h-5 w-5" />
+                    <span className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Manage Settings
+                    </span>
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                Blog Posts Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm mb-4">
+                Create, edit, and delete blog posts. All posts support AI-generated summaries.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
+                  <div className="flex-1">
+                    <div className="font-semibold">Building Modern Web Applications with Next.js 15</div>
+                    <div className="text-sm text-muted-foreground">Published • 8 min read • 1,234 views</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <Link href="/admin/posts" className="block">
+                <Button variant="outline" className="w-full">
+                  View All Blog Posts
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+
+      <footer className="border-t">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="space-y-4">
+              <h3 className="font-semibold mb-4">Quick Links</h3>
+              <div className="space-y-2">
+                <Link href="/blog" className="text-sm text-muted-foreground">
+                  Blog Posts
+                </Link>
+                <Link href="/garden" className="text-sm text-muted-foreground">
+                  Garden Notes
+                </Link>
+                <Link href="/forge" className="text-sm text-muted-foreground">
+                  Projects
+                </Link>
+                <Link href="/hub" className="text-sm text-muted-foreground">
+                  Hub Dashboard
+                </Link>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-semibold mb-4">Connect</h3>
+              <div className="space-y-2">
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Github className="h-4 w-4" />
+                  <span>GitHub</span>
+                </a>
+                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Twitter className="h-4 w-4" />
+                  <span>Twitter</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-semibold mb-4">Owner Portal</h3>
+              <div className="space-y-2">
+                <Link href="/auth/login" className="text-sm text-muted-foreground">
+                  Logout
+                </Link>
+                <Link href="/" className="text-sm text-muted-foreground">
+                  Home
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}

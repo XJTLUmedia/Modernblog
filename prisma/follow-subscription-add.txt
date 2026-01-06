@@ -1,0 +1,27 @@
+// Follow model for user-to-user relationships
+model Follow {
+  id          String    @id @default(cuid())
+  followerId  String
+  follower    User       @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId  String
+  following   User       @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+// Subscription model for email subscriptions to new posts
+model Subscription {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  userId      String?
+  frequency   String    @default("immediate") // immediate, daily, weekly, monthly
+  categories  String? // JSON array of categories to subscribe to
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  unsubscribedAt DateTime?
+
+  // Relations
+  user        User?       @relation(fields: [userId], references: [id])
+}

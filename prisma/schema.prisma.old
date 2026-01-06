@@ -1,0 +1,291 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and user management
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  role          String    @default("subscriber")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  posts         Post[]
+  gardenNotes   GardenNote[]
+  projects      Project[]
+  comments      Comment[]
+  guestbookEntries GuestbookEntry[]
+  reactions     Reaction[]
+  followers     Follow[]       @relation("UserFollowers")
+  following     Follow[]       @relation("UserFollowing")
+  subscriptions Subscription[]
+}
+
+// Blog posts - "The Surface" section
+model Post {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  excerpt       String?
+  content       String
+  coverImage    String?
+  summary       String?   // AI-generated summary
+  readingTime   Int?      // in minutes
+  published     Boolean   @default(false)
+  featured      Boolean   @default(false)
+
+  // SEO
+  metaTitle     String?
+  metaDescription String?
+
+  // Analytics
+  viewCount     Int       @default(0)
+  likeCount     Int       @default(0)
+
+  // Timestamps
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  tags          PostTag[]
+  comments      Comment[]
+  reactions     Reaction[]
+  relatedPosts  RelatedPost[] @relation("PostRelated")
+  relatedTo     RelatedPost[] @relation("RelatedToPost")
+}
+
+// Digital Garden Notes - "The Lab" section
+model GardenNote {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  content       String
+  status        String    @default("seedling") // seedling, growing, evergreen
+  summary       String?
+
+  // Links between notes (wiki-like)
+  links         String    // JSON array of linked note IDs
+
+  // Analytics
+  viewCount     Int       @default(0)
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  tags          GardenNoteTag[]
+  comments      Comment[]
+
+  @@index([status])
+}
+
+// Projects - "The Forge" section
+model Project {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  description   String
+  longDescription String?
+  coverImage    String?
+  liveUrl       String?
+  githubUrl     String?
+  status        String    @default("in-progress") // idea, in-progress, completed, archived
+
+  // Project tech stack
+  techStack     String    // JSON array
+
+  // Featured order for display
+  order         Int       @default(0)
+
+  // Analytics
+  viewCount     Int       @default(0)
+
+  // Timestamps
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  tags          ProjectTag[]
+}
+
+// Tags for categorization
+model Tag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  color       String?
+
+  // Relations
+  posts       PostTag[]
+  gardenNotes GardenNoteTag[]
+  projects    ProjectTag[]
+}
+
+// Join table for Posts and Tags
+model PostTag {
+  id        String  @id @default(cuid())
+  postId    String
+  tagId     String
+
+  post      Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, tagId])
+}
+
+// Join table for GardenNotes and Tags
+model GardenNoteTag {
+  id          String      @id @default(cuid())
+  gardenNoteId String
+  tagId       String
+
+  gardenNote  GardenNote  @relation(fields: [gardenNoteId], references: [id], onDelete: Cascade)
+  tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([gardenNoteId, tagId])
+}
+
+// Join table for Projects and Tags
+model ProjectTag {
+  id        String   @id @default(cuid())
+  projectId String
+  tagId     String
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, tagId])
+}
+
+// Comments for Posts and GardenNotes
+model Comment {
+  id          String    @id @default(cuid())
+  content     String
+  authorName  String?
+  authorEmail String?
+
+  // Comment can be on a post or garden note
+  postId      String?
+  post        Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  gardenNoteId String?
+  gardenNote  GardenNote? @relation(fields: [gardenNoteId], references: [id], onDelete: Cascade)
+
+  // For threaded comments
+  parentId    String?
+  parent      Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
+
+  // Relations
+  authorId    String?
+  author      User?     @relation(fields: [authorId], references: [id])
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Reactions (emojis) for Posts
+model Reaction {
+  id        String   @id @default(cuid())
+  emoji     String   // ❤️, 🔥, 👍, etc.
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // Relations
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, emoji, authorId])
+}
+
+// Related posts (smart suggestions using embeddings)
+model RelatedPost {
+  id          String  @id @default(cuid())
+  postId      String
+  relatedId   String
+  similarity  Float   // 0-1 score from embedding comparison
+
+  post        Post    @relation("PostRelated", fields: [postId], references: [id], onDelete: Cascade)
+  related     Post    @relation("RelatedToPost", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, relatedId])
+}
+
+// Guestbook entries
+model GuestbookEntry {
+  id          String    @id @default(cuid())
+  name        String
+  message     String
+  website     String?
+
+  // Relations
+  authorId    String?
+  author      User?     @relation(fields: [authorId], references: [id])
+
+  createdAt   DateTime  @default(now())
+}
+
+// Now page data - for "What I'm doing now"
+model NowPage {
+  id          String    @id @default(cuid())
+  content     String    // Markdown content
+
+  // Activity tracking
+  githubRepos String?   // JSON array of active repos
+  readingList String?   // JSON array of current reads
+  listeningTo String?   // JSON array of current music/podcasts
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+// Follow model for user-to-user relationships
+model Follow {
+  id          String    @id @default(cuid())
+  followerId  String
+  follower    User       @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId  String
+  following   User       @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+// Subscription model for email subscriptions to new posts
+model Subscription {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  userId      String?
+  frequency   String    @default("immediate") // immediate, daily, weekly, monthly
+  categories  String? // JSON array of categories to subscribe to
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  unsubscribedAt DateTime?
+
+  // Relations
+  user        User?       @relation(fields: [userId], references: [id])
+}

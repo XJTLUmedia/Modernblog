@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
       ...item,
       score: calculateRelevance(query, {
         title: item.title,
-        content: item.content,
-        description: item.excerpt
+        content: item.content || undefined,
+        description: item.excerpt || undefined
       })
     })).sort((a, b) => b.score - a.score)
 

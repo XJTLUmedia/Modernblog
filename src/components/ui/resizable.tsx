@@ -2,7 +2,10 @@
 
 import * as React from "react"
 import { GripVerticalIcon } from "lucide-react"
-import * as ResizablePrimitive from "react-resizable-panels"
+import * as ResizablePrimitiveExports from "react-resizable-panels"
+
+// Cast to any to avoid "Property does not exist" TS issues if types are mismatched
+const ResizablePrimitive = ResizablePrimitiveExports as any
 
 import { cn } from "@/lib/utils"
 

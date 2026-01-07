@@ -29,7 +29,21 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  reactStrictMode: false
+  reactStrictMode: false,
+  async redirects() {
+    return [
+      {
+        source: '/projects',
+        destination: '/forge',
+        permanent: true,
+      },
+      {
+        source: '/projects/:slug',
+        destination: '/forge/:slug',
+        permanent: true,
+      }
+    ]
+  }
 }
 
 export default nextConfig

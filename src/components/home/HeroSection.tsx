@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BirthdayGreeting } from '@/components/BirthdayGreeting'
 
 export function HeroSection() {
     return (
@@ -18,6 +19,7 @@ export function HeroSection() {
                     transition={{ duration: 0.6 }}
                     className="text-center"
                 >
+                    <BirthdayGreeting />
                     <h1 className="text-5xl sm:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground">
                         Modern, AI-Powered Blog
                     </h1>

@@ -38,6 +38,30 @@ model User {
   bookmarks       Bookmark[]
 }
 
+// Site-wide configuration and feature toggles
+model SiteSettings {
+  id              String   @id @default("site-config")
+  siteName        String   @default("Antigravity OS")
+  siteDescription String   @default("Neural-link optimized intellectual forge.")
+  
+  // Memorization Feature Toggles
+  memorizationMode Boolean @default(true)
+  activeRecall     Boolean @default(true)
+  spacedRepetition Boolean @default(true)
+  
+  // Appearance
+  themeColor      String   @default("#10b981")
+  
+  // Social
+  githubUrl       String?
+  twitterUrl      String?
+
+  // Personalization
+  birthday        DateTime?
+  
+  updatedAt       DateTime @updatedAt
+}
+
 // Blog posts - "The Surface" section
 model Post {
   id               String    @id @default(cuid())
@@ -50,6 +74,10 @@ model Post {
   readingTime      Int?       // in minutes
   published        Boolean    @default(false)
   featured         Boolean    @default(false)
+
+  // Memorization
+  recallQuestions  String?   // JSON array of questions
+  mnemonics        String?   // JSON array
 
   // SEO
   metaTitle        String?
@@ -83,6 +111,12 @@ model GardenNote {
   content          String
   status           String    @default("seedling") // seedling, growing, evergreen
   summary          String?
+
+  // Memorization & Spaced Repetition
+  lastReviewed     DateTime?
+  nextReview       DateTime?
+  reviewInterval   Int       @default(1) // in days
+  recallQuestions  String?   // JSON array
 
   // Links between notes (wiki-like)
   links            String?   // JSON array of linked note IDs
@@ -118,6 +152,11 @@ model Project {
   techStack        String?   // JSON array
   progress         Int        @default(0)
   priority         String     @default("medium") // low, medium, high
+
+  // Memorization
+  studyChunks      String?   // JSON array of manageable bits
+  mnemonics        String?   // JSON array
+  recallQuestions  String?   // JSON array of questions
 
   // Featured order for display
   order            Int        @default(0)

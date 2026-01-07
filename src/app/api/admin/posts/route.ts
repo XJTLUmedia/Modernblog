@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, slug, excerpt, content, published, tags } = body
+    const { title, slug, excerpt, content, published, tags, recallQuestions, mnemonics } = body
 
     // Verify admin status (checks database if cookies are stale)
     const { isAdmin, userId } = await verifyAdmin(request)
@@ -107,14 +107,18 @@ export async function POST(request: NextRequest) {
         published: published ?? false,
         authorId: userId,
         publishedAt: published ? new Date() : null,
-        readingTime: Math.ceil(content.split(/\s+/).length / 200)
+        readingTime: Math.ceil(content.split(/\s+/).length / 200),
+        // @ts-ignore
+        recallQuestions: recallQuestions || null,
+        mnemonics: mnemonics || null
       }
     })
 
     console.log('Post created successfully:', { id: post.id, title: post.title, slug: post.slug })
 
     if (tags && Array.isArray(tags)) {
-      for (const tagName of tags) {
+      const normalizedTags = tags.map(t => typeof t === 'string' ? t : t.name).filter(Boolean)
+      for (const tagName of normalizedTags) {
         let tag = await prisma.tag.findUnique({
           where: { name: tagName }
         })
@@ -163,7 +167,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, title, slug, excerpt, content, published, tags } = body
+    const { id, title, slug, excerpt, content, published, tags, recallQuestions, mnemonics } = body
 
     // Verify admin status (checks database if cookies are stale)
     const { isAdmin, userId } = await verifyAdmin(request)
@@ -187,7 +191,26 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (title) updateData.title = title
-    if (slug) updateData.slug = slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\s-]+/g, '-')
+    if (slug) {
+      const postSlug = slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\s-]+/g, '-')
+
+      // Check if slug is taken by another post
+      const existingPost = await prisma.post.findFirst({
+        where: {
+          slug: postSlug,
+          NOT: { id: id }
+        }
+      })
+
+      if (existingPost) {
+        return NextResponse.json(
+          { error: 'This slug is already in use by another post.' },
+          { status: 409 }
+        )
+      }
+
+      updateData.slug = postSlug
+    }
     if (excerpt !== undefined) updateData.excerpt = excerpt || null
     if (content) {
       updateData.content = content
@@ -199,6 +222,8 @@ export async function PATCH(request: NextRequest) {
         updateData.publishedAt = new Date()
       }
     }
+    if (recallQuestions !== undefined) updateData.recallQuestions = recallQuestions
+    if (mnemonics !== undefined) updateData.mnemonics = mnemonics
 
     const post = await prisma.post.update({
       where: { id },
@@ -228,13 +253,14 @@ export async function PATCH(request: NextRequest) {
 
     // Handle tags if provided
     if (tags && Array.isArray(tags)) {
+      const normalizedTags = tags.map(t => typeof t === 'string' ? t : t.name).filter(Boolean)
       // Remove existing tags
       await prisma.postTag.deleteMany({
         where: { postId: id }
       })
 
       // Add new tags
-      for (const tagName of tags) {
+      for (const tagName of normalizedTags) {
         let tag = await prisma.tag.findUnique({
           where: { name: tagName }
         })
@@ -264,6 +290,15 @@ export async function PATCH(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Error updating post:', error)
+
+    // Handle Prisma unique constraint errors
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'This slug is already in use by another post.' },
+        { status: 409 }
+      )
+    }
+
     return NextResponse.json(
       { error: error.message || 'Failed to update post' },
       { status: 500 }

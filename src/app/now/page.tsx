@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Clock, Github, Music, BookOpen, Code2, Heart, ArrowLeft, Globe, MapPin, Coffee, Hammer, LayoutDashboard, Sparkles } from 'lucide-react'
+import { Clock, Github, Music, BookOpen, Code2, Heart, ArrowLeft, Globe, MapPin, Coffee, Hammer, LayoutDashboard, Sparkles, Activity, Sprout, Target } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import { motion } from 'framer-motion'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
+import { NeuralOptimizationManual } from '@/components/NeuralOptimizationManual'
 
 export default function NowPage() {
   const [loading, setLoading] = useState(true)
@@ -18,11 +19,29 @@ export default function NowPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/hub')
-        if (res.ok) {
-          const data = await res.json()
-          setNowData(data)
-        }
+        const [hubRes, projectsRes, postsRes, gardenRes] = await Promise.all([
+          fetch('/api/hub'),
+          fetch('/api/projects'),
+          fetch('/api/posts?published=true'),
+          fetch('/api/garden')
+        ])
+
+        const [hubData, projects, posts, garden] = await Promise.all([
+          hubRes.ok ? hubRes.json() : null,
+          projectsRes.ok ? projectsRes.json() : [],
+          postsRes.ok ? postsRes.json() : [],
+          gardenRes.ok ? gardenRes.json() : []
+        ])
+
+        // Merge manually curated hub data with dynamic database data
+        setNowData({
+          ...hubData,
+          activeProjects: Array.isArray(projects) ? projects.filter((p: any) => p.status === 'in-progress' || p.status === 'completed').slice(0, 3) : [],
+          recentActivity: [
+            ...(Array.isArray(posts) ? posts.map(p => ({ ...p, type: 'Post' })) : []),
+            ...(Array.isArray(garden) ? garden.map(n => ({ ...n, type: 'Note' })) : [])
+          ].sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()).slice(0, 5)
+        })
       } catch (error) {
         console.error('Error fetching now data:', error)
       } finally {
@@ -115,6 +134,8 @@ export default function NowPage() {
                   </motion.div>
                 )}
 
+                <NeuralOptimizationManual />
+
                 {/* Building / Projects Section */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -124,35 +145,97 @@ export default function NowPage() {
                   <Card className="border-2 shadow-sm overflow-hidden">
                     <CardHeader className="bg-muted/30">
                       <CardTitle className="flex items-center gap-2">
-                        <Code2 className="h-5 w-5 text-primary" />
-                        Currently Building
+                        <Hammer className="h-5 w-5 text-amber-500" />
+                        Active Build Pipeline
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
-                      <div className="grid grid-cols-1 gap-6">
-                        {githubRepos.length > 0 ? (
-                          githubRepos.map((repo: any, index: number) => (
-                            <div key={index} className="group p-4 rounded-xl border hover:border-primary/50 transition-all hover:shadow-md bg-card/50">
-                              <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{repo.name}</h3>
-                                <Badge variant="secondary" className="bg-primary/5 text-primary">Active</Badge>
+                      <div className="space-y-6">
+                        {nowData?.activeProjects?.length > 0 ? (
+                          nowData.activeProjects.map((project: any, index: number) => (
+                            <div key={index} className="space-y-3 group">
+                              <div className="flex items-center justify-between">
+                                <Link href={`/forge/${project.slug}`} className="font-bold text-lg hover:text-amber-600 transition-colors">
+                                  {project.title}
+                                </Link>
+                                <Badge variant="outline" className="border-amber-500/20 text-amber-600 font-bold uppercase tracking-tighter text-[10px]">
+                                  {project.status.replace('-', ' ')}
+                                </Badge>
                               </div>
-                              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{repo.description}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                                {project.description}
+                              </p>
                               <div className="flex items-center gap-4">
-                                <a href={repo.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
-                                  <Github className="h-4 w-4" />
-                                  GitHub
-                                </a>
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <div className="h-2 w-2 rounded-full bg-primary" />
-                                  TypeScript
-                                </div>
+                                <Progress value={project.progress} className="h-2 flex-1" />
+                                <span className="text-[10px] font-black text-muted-foreground w-8">{project.progress}%</span>
                               </div>
                             </div>
                           ))
                         ) : (
                           <div className="text-center py-8 text-muted-foreground italic">
-                            No active projects listed at the moment.
+                            Constructing new architectural patterns...
+                          </div>
+                        )}
+
+                        {githubRepos.length > 0 && (
+                          <div className="pt-6 border-t space-y-4">
+                            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">Referenced Codebases</div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {githubRepos.map((repo: any, index: number) => (
+                                <a key={index} href={repo.url} target="_blank" rel="noopener noreferrer" className="p-4 rounded-xl border-2 border-muted bg-muted/5 hover:border-primary/30 transition-all group">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <Github className="h-4 w-4" />
+                                    <span className="font-bold text-sm group-hover:text-primary transition-colors underline-offset-4 group-hover:underline">{repo.name}</span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground line-clamp-1">{repo.description}</p>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Recent Activity Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <Card className="border-2 shadow-sm bg-zinc-950 text-white overflow-hidden">
+                    <CardHeader className="border-b border-white/10 bg-white/5">
+                      <CardTitle className="flex items-center gap-2">
+                        <Activity className="h-5 w-5 text-emerald-500" />
+                        Recent System Pulses
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        {nowData?.recentActivity?.length > 0 ? (
+                          nowData.recentActivity.map((activity: any, index: number) => (
+                            <Link key={index} href={activity.type === 'Post' ? `/blog/${activity.slug}` : `/garden/${activity.slug}`} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/10">
+                              <div className={`p-2 rounded-lg ${activity.type === 'Post' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'} group-hover:scale-110 transition-transform`}>
+                                {activity.type === 'Post' ? <BookOpen className="h-4 w-4" /> : <Sprout className="h-4 w-4" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-bold truncate group-hover:text-primary transition-colors">{activity.title}</div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="secondary" className="text-[8px] h-3 px-1.5 uppercase font-black bg-white/10 text-white/60 border-none">
+                                    {activity.type}
+                                  </Badge>
+                                  <span className="text-[10px] text-white/40 font-medium">
+                                    {new Date(activity.updatedAt || activity.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                              <Sparkles className="h-4 w-4 text-white/0 group-hover:text-amber-500/50 transition-all" />
+                            </Link>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-white/40 italic text-sm">
+                            System idle. Awaiting next data transmission...
                           </div>
                         )}
                       </div>
@@ -167,23 +250,23 @@ export default function NowPage() {
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
+                  transition={{ delay: 0.4 }}
                 >
                   <Card className="border-2 shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
-                        <Coffee className="h-5 w-5 text-orange-500" />
-                        Learning
+                        <Target className="h-5 w-5 text-orange-500" />
+                        Research Paths
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {learning.map((item: any, index: number) => (
                         <div key={index} className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span className="font-medium">{item.topic}</span>
-                            <span className="text-muted-foreground">{item.progress}%</span>
+                            <span className="font-bold">{item.topic}</span>
+                            <span className="text-muted-foreground font-mono text-[10px]">{item.progress}%</span>
                           </div>
-                          <Progress value={item.progress} className="h-2" />
+                          <Progress value={item.progress} className="h-1.5" />
                         </div>
                       ))}
                     </CardContent>

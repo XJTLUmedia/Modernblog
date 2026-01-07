@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Sprout, Leaf, ArrowRight, User, Calendar, Clock } from 'lucide-react'
+import { Sprout, Leaf, ArrowRight, User, Calendar, Clock, Zap, Plus } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -31,6 +31,22 @@ const statusConfig = {
 export default function GardenPage() {
   const [notes, setNotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check')
+        if (res.ok) {
+          const data = await res.json()
+          setIsAdmin(data.isAdmin)
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err)
+      }
+    }
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -74,12 +90,24 @@ export default function GardenPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-16"
           >
-            <h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tight">
-              The <span className="text-emerald-500 italic">Lab</span>.
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
-              Living, interconnected notes and raw insights forming a digital garden of thoughts.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+              <div className="flex-1">
+                <h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tight">
+                  The <span className="text-emerald-500 italic">Lab</span>.
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
+                  Living, interconnected notes and raw insights forming a digital garden of thoughts.
+                </p>
+              </div>
+              {isAdmin && (
+                <Link href="/admin/garden/new">
+                  <Button className="h-16 px-8 gap-3 font-black rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20 transition-all hover:scale-105 active:scale-95">
+                    <Plus className="h-5 w-5" />
+                    Plant New Seed
+                  </Button>
+                </Link>
+              )}
+            </div>
           </motion.div>
 
           {notes.length === 0 ? (
@@ -136,12 +164,21 @@ export default function GardenPage() {
                             {note.viewCount || 0} visits
                           </div>
                         </div>
-                        <Link href={`/garden/${note.slug}`}>
-                          <Button className="w-full gap-2 font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
-                            Explore Note
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                        <div className="flex gap-2">
+                          <Link href={`/garden/${note.slug}`} className="flex-1">
+                            <Button className="w-full gap-2 font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all group-hover:scale-[1.02]">
+                              Explore Note
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          {isAdmin && (
+                            <Link href={`/admin/garden/${note.id}/edit`}>
+                              <Button variant="outline" size="icon" className="h-10 w-10 border-2 border-emerald-500/20 hover:bg-emerald-50 rounded-xl">
+                                <Zap className="h-4 w-4 text-emerald-600" />
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>

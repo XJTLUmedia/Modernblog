@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Save, Eye, Sprout, CheckCircle2, Loader2, Leaf } from 'lucide-react'
+import { ArrowLeft, Save, Eye, Sprout, CheckCircle2, Loader2, Leaf, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,8 @@ export default function NewGardenNote() {
   const [slug, setSlug] = useState('')
   const [content, setContent] = useState('')
   const [status, setStatus] = useState('seedling')
+  const [recallQuestions, setRecallQuestions] = useState('')
+  const [reviewInterval, setReviewInterval] = useState(1)
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +36,9 @@ export default function NewGardenNote() {
           title,
           slug: slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\s-]+/g, '-'),
           content,
-          status
+          status,
+          recallQuestions: recallQuestions ? JSON.stringify(recallQuestions.split('\n').filter(s => s.trim())) : null,
+          reviewInterval
         })
       })
 
@@ -149,7 +153,7 @@ export default function NewGardenNote() {
 
               {/* Sidebar Settings */}
               <div className="space-y-8">
-                <Card className="border-2 border-emerald-100 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl sticky top-32">
+                <Card className="border-2 border-emerald-100 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl">
                   <CardHeader className="bg-emerald-50/30 py-6 border-b border-emerald-100">
                     <CardTitle className="text-lg font-black tracking-widest uppercase flex items-center gap-2 text-emerald-800">
                       Cultivation Stats
@@ -194,6 +198,38 @@ export default function NewGardenNote() {
                           </span>
                         ) : 'Cultivate'}
                       </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Spaced Repetition Settings */}
+                <Card className="border-2 border-emerald-500/20 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl">
+                  <CardHeader className="bg-emerald-500/5 py-6 border-b border-emerald-500/10">
+                    <CardTitle className="text-sm font-black tracking-widest uppercase flex items-center gap-2 text-emerald-600">
+                      <Clock className="h-4 w-4" />
+                      Neural Sync
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="review" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Review Interval (Days)</Label>
+                      <Input
+                        id="review"
+                        type="number"
+                        value={reviewInterval}
+                        onChange={(e) => setReviewInterval(parseInt(e.target.value))}
+                        className="h-10 text-xs font-mono bg-emerald-50/10 border-2 border-emerald-100 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="recall" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Force Retrieval (one per line)</Label>
+                      <Textarea
+                        id="recall"
+                        placeholder="What core concept was explored?&#10;How does this relate to X?"
+                        value={recallQuestions}
+                        onChange={(e) => setRecallQuestions(e.target.value)}
+                        className="min-h-[100px] text-xs font-medium bg-emerald-50/10 border-2 border-emerald-100 rounded-xl"
+                      />
                     </div>
                   </CardContent>
                 </Card>

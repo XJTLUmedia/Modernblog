@@ -3,15 +3,17 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { Hammer, ArrowLeft, ExternalLink, Github, Calendar, Eye, Code2, Layers, Target, Rocket, Sparkles, Box } from 'lucide-react'
+import { Hammer, ArrowLeft, ExternalLink, Github, Calendar, Eye, Code2, Layers, Target, Rocket, Sparkles, Box, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Progress } from '@/components/ui/progress'
+import { safeJsonParse } from '@/lib/utils'
+import ReactMarkdown from 'react-markdown'
 
 const statusConfig = {
   idea: { label: 'Conceptual', color: 'bg-slate-500/10 text-slate-600 border-slate-500/20', icon: '💡' },
@@ -26,6 +28,9 @@ export default function ProjectPage() {
   const [project, setProject] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showAnchors, setShowAnchors] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [isBirthday, setIsBirthday] = useState(false)
 
   useEffect(() => {
     if (!slug) return
@@ -48,7 +53,39 @@ export default function ProjectPage() {
       }
     }
 
+    const checkBirthday = async () => {
+      try {
+        const res = await fetch('/api/admin/settings')
+        if (res.ok) {
+          const settings = await res.json()
+          if (settings.birthday) {
+            const bday = new Date(settings.birthday)
+            const today = new Date()
+            if (bday.getMonth() === today.getMonth() && bday.getDate() === today.getDate()) {
+              setIsBirthday(true)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking birthday:', error)
+      }
+    }
+
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check')
+        if (res.ok) {
+          const data = await res.json()
+          setIsAdmin(data.isAdmin)
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err)
+      }
+    }
+
     fetchProject()
+    checkBirthday()
+    checkAuth()
   }, [slug])
 
   if (loading) {
@@ -118,6 +155,14 @@ export default function ProjectPage() {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-3"
               >
+                {isAdmin && (
+                  <Link href={`/admin/projects/${project.id}/edit`}>
+                    <Button variant="outline" size="sm" className="gap-2 font-black border-2 border-primary/20 hover:bg-primary/10">
+                      <Zap className="h-4 w-4 text-primary" />
+                      Edit Schematic
+                    </Button>
+                  </Link>
+                )}
                 {project.githubUrl && (
                   <Button variant="outline" size="sm" className="gap-2 font-bold border-2 rounded-xl" asChild>
                     <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
@@ -252,6 +297,109 @@ export default function ProjectPage() {
               </div>
             </div>
 
+            {/* Neural Encoding - Chunking & Mnemonics */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-16 grid grid-cols-1 md:grid-cols-2 gap-8"
+            >
+              {/* System Decomposition (Chunking) */}
+              <Card className="border-2 border-amber-500/20 bg-amber-500/5 rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+                <div className="absolute top-0 right-0 p-6 opacity-10">
+                  <Box className="h-16 w-16 text-amber-600" />
+                </div>
+                <CardHeader className="p-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="h-4 w-4 text-amber-600" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">Architectural Chunking</span>
+                  </div>
+                  <CardTitle className="text-2xl font-black">System Decomposition.</CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 pt-0 space-y-4">
+                  <p className="text-sm font-medium text-amber-900/60 dark:text-amber-400/60 mb-4">
+                    Breaking this build into manageable mental nodes for easier pattern recognition.
+                  </p>
+                  <div className="space-y-3">
+                    {safeJsonParse(project.studyChunks, ["Core Internal API", "Neural Link Interface", "Data Persistence Layer"]).map((chunk: string, i: number) => (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-white/50 dark:bg-zinc-900/50 rounded-xl border border-amber-500/10">
+                        <div className="h-2 w-2 rounded-full bg-amber-500" />
+                        <span className="font-bold text-sm">{chunk}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Technical Mnemonics */}
+              <Card className="border-2 border-blue-500/20 bg-blue-500/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                <CardHeader className="p-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Encoding Strategy</span>
+                  </div>
+                  <CardTitle className="text-2xl font-black">Memory Anchors.</CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 pt-0 space-y-6">
+                  <div className="p-5 bg-blue-500/10 rounded-2xl border-2 border-blue-500/20 italic font-bold text-blue-700 dark:text-blue-300">
+                    {safeJsonParse(project.mnemonics, ["\"Sync, Sec, Forge\" — Synchronize state, Secure the node, Forge the output."])[0]}
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground leading-relaxed mb-6">
+                    Use this mnemonic to recall the primary execution loop of this system's architecture.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowAnchors(!showAnchors)
+                    }}
+                    className="w-full h-12 border-blue-500/20 bg-white/50 hover:bg-blue-50 font-black text-xs uppercase tracking-[0.2em] rounded-xl transition-all"
+                  >
+                    {showAnchors ? 'Secure Protocol' : 'Reveal Architecture'}
+                  </Button>
+
+                  <AnimatePresence>
+                    {showAnchors && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="pt-6 space-y-8 border-t border-blue-500/10"
+                      >
+                        <motion.article
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.4 }}
+                          className="prose prose-sm dark:prose-invert max-w-none 
+                            prose-headings:font-black prose-headings:tracking-tighter 
+                            prose-p:leading-[1.8] prose-p:text-foreground/70
+                            prose-blockquote:border-primary prose-blockquote:bg-primary/5 
+                            prose-blockquote:rounded-2xl prose-blockquote:py-4 prose-blockquote:px-6
+                            prose-strong:text-foreground prose-a:text-primary prose-a:font-black"
+                        >
+                          <div className="flex items-center gap-2 mb-6 text-[10px] font-black text-primary uppercase tracking-[0.4em] opacity-50">
+                            <Zap className="h-3 w-3 fill-primary" /> Forge Architecture Synchronized
+                          </div>
+                          <h2 className="flex items-center gap-4 text-xl">
+                            <Code2 className="h-6 w-6 text-primary" />
+                            Technical Implementation
+                          </h2>
+                          {project.description ? (
+                            <div className="text-sm">
+                              <ReactMarkdown>{project.description}</ReactMarkdown>
+                            </div>
+                          ) : (
+                            <p className="italic text-muted-foreground font-bold text-xs uppercase tracking-widest">
+                              Architecture diagrams and implementation details are currently under classification.
+                            </p>
+                          )}
+                        </motion.article>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            </motion.div>
+
             {/* Smart Summary Section */}
             {project.summary && (
               <motion.div
@@ -272,33 +420,7 @@ export default function ProjectPage() {
               </motion.div>
             )}
 
-            <Separator className="my-16" />
-
-            {/* Detailed Content */}
-            <motion.article
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="prose prose-xl dark:prose-invert max-w-none 
-                prose-headings:font-black prose-headings:tracking-tighter 
-                prose-p:leading-[1.8] prose-p:text-foreground/70
-                prose-blockquote:border-primary prose-blockquote:bg-primary/5 
-                prose-blockquote:rounded-2xl prose-blockquote:py-8 prose-blockquote:px-12
-                prose-strong:text-foreground prose-a:text-primary prose-a:font-black
-                mb-24"
-            >
-              <h2 className="flex items-center gap-4">
-                <Code2 className="h-8 w-8 text-primary" />
-                Technical Implementation
-              </h2>
-              {project.description ? (
-                <div className="whitespace-pre-wrap">
-                  {project.description}
-                </div>
-              ) : (
-                <p className="italic text-muted-foreground font-black">Architecture diagrams and implementation details are currently under classification.</p>
-              )}
-            </motion.article>
+            {/* Content Area - MOVED TO REVEAL SECTION */}
           </div>
         </div>
       </main>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Hammer, ExternalLink, Github, ArrowRight, Star, Layers, Activity } from 'lucide-react'
+import { Hammer, ExternalLink, Github, ArrowRight, Star, Layers, Activity, Zap, Plus } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,22 @@ const statusConfig = {
 export default function ForgePage() {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check')
+        if (res.ok) {
+          const data = await res.json()
+          setIsAdmin(data.isAdmin)
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err)
+      }
+    }
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -64,12 +80,24 @@ export default function ForgePage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-16"
           >
-            <h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tight">
-              The <span className="text-amber-500 italic">Forge</span>.
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
-              Crafting high-performance digital experiences through case studies and experimental builds.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+              <div className="flex-1">
+                <h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tight">
+                  The <span className="text-amber-500 italic">Forge</span>.
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
+                  Crafting high-performance digital experiences through case studies and experimental builds.
+                </p>
+              </div>
+              {isAdmin && (
+                <Link href="/admin/projects/new">
+                  <Button className="h-16 px-8 gap-3 font-black rounded-2xl bg-amber-600 hover:bg-amber-700 text-white shadow-xl shadow-amber-600/20 transition-all hover:scale-105 active:scale-95">
+                    <Plus className="h-5 w-5" />
+                    Initiate New Build
+                  </Button>
+                </Link>
+              )}
+            </div>
           </motion.div>
 
           {/* Projects Grid */}
@@ -151,12 +179,21 @@ export default function ForgePage() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-6 border-t bg-muted/5 transition-colors group-hover:bg-amber-500/5">
-                        <Link href={`/forge/${project.slug}`} className="w-full">
-                          <Button className="w-full gap-2 font-bold bg-zinc-900 hover:bg-zinc-800 text-white shadow-xl">
-                            Case Study Breakdown
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                        <div className="flex w-full gap-2">
+                          <Link href={`/forge/${project.slug}`} className="flex-1">
+                            <Button className="w-full gap-2 font-bold bg-zinc-900 hover:bg-zinc-800 text-white shadow-xl">
+                              Case Study Breakdown
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          {isAdmin && (
+                            <Link href={`/admin/projects/${project.id}/edit`}>
+                              <Button variant="outline" size="icon" className="h-10 w-10 border-2 border-amber-500/20 hover:bg-amber-50 rounded-xl">
+                                <Zap className="h-4 w-4 text-amber-600" />
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
                       </CardFooter>
                     </Card>
                   </motion.div>

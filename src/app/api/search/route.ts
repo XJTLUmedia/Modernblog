@@ -6,7 +6,7 @@ import { calculateRelevance, generateAIContent } from '@/lib/ai'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { query, limit = 10, mode = 'auto' } = body // mode: 'auto' | 'search' | 'ask'
+    const { query, history = [], limit = 10 } = body
 
     if (!query || query.trim().length === 0) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 })
@@ -84,24 +84,22 @@ export async function POST(request: NextRequest) {
     }).join('\n\n---\n\n')
 
     // 4. Construct Prompt based on intent
-    const systemPrompt = `You are the AI Assistant for a developer's personal blog/digital garden. 
-Your goal is to help users find content and answer questions.
+    const systemPrompt = `You are the AI Librarian & Technical Architect for this digital garden.
+Your goal is to guide users through the blog, garden, and forge content.
 
-Context: The user is searching or asking about: "${query}"
+Context: 
+- User Query: "${query}"
+- Interaction History: ${history.length > 0 ? JSON.stringify(history) : 'None'}
 
 Instructions:
 1. Analyze the 'Knowledge Base' provided below.
-2. If the user's query matches content in the Knowledge Base:
-   - prioritization finding relevant content.
-   - Answer their question using that content.
-   - Return valid 'results' referencing the source items.
-3. If the user's query is a GENERAL QUESTION (e.g., "what is 1+1", "explain generics in general") and NO specific blog content is found:
-   - Answer the question helpfully using your own general knowledge.
-   - clearly state: "I couldn't find specific matches in the blog, but here is a general answer:"
-   - Return empty 'results'.
-4. ALWAYS return a JSON response with: 
-   - 'answer': A helpful natural language summary/answer.
-   - 'results': An array of the top relevant items (if any). { id, type, title, slug, relevanceScore, reason }.
+2. If this is a FOLLOW-UP question, maintain the context of the previous conversation.
+3. If the user asks to "summarize" or "explain" something specific from the Knowledge Base, do so in detail.
+4. If the user asks a general question NOT in the knowledge base, answer helpfully but mark it clearly.
+5. ALWAYS return a JSON response with: 
+   - 'answer': A helpful natural language answer (Markdown supported).
+   - 'results': An array of relevant sources. { id, type, title, slug, relevanceScore, reason }.
+6. Keep results focused on the TOP 3-5 most related items.
 
 Knowledge Base:
 ${contextText}`
@@ -111,7 +109,8 @@ ${contextText}`
     try {
       const aiResponse = await generateAIContent({
         messages: [
-          { role: 'system', content: 'You are a helpful JSON-speaking assistant.' },
+          { role: 'system', content: 'You are a helpful JSON-speaking technical assistant.' },
+          ...history.map((h: any) => ({ role: h.role, content: h.content })),
           { role: 'user', content: systemPrompt }
         ]
       })

@@ -22,6 +22,8 @@ export default function EditBlogPost() {
   const [content, setContent] = useState('')
   const [excerpt, setExcerpt] = useState('')
   const [published, setPublished] = useState(false)
+  const [recallQuestions, setRecallQuestions] = useState('')
+  const [mnemonics, setMnemonics] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -43,6 +45,15 @@ export default function EditBlogPost() {
             setContent(post.content || '')
             setExcerpt(post.excerpt || '')
             setPublished(post.published || false)
+
+            if (post.recallQuestions) {
+              const q = typeof post.recallQuestions === 'string' ? JSON.parse(post.recallQuestions) : post.recallQuestions
+              setRecallQuestions(Array.isArray(q) ? q.join('\n') : '')
+            }
+            if (post.mnemonics) {
+              const m = typeof post.mnemonics === 'string' ? JSON.parse(post.mnemonics) : post.mnemonics
+              setMnemonics(Array.isArray(m) ? m.join('\n') : '')
+            }
           } else {
             console.error('Post not found')
           }
@@ -72,7 +83,9 @@ export default function EditBlogPost() {
           slug: slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\s-]+/g, '-'),
           content,
           excerpt,
-          published
+          published,
+          recallQuestions: recallQuestions ? JSON.stringify(recallQuestions.split('\n').filter(s => s.trim())) : null,
+          mnemonics: mnemonics ? JSON.stringify(mnemonics.split('\n').filter(s => s.trim())) : null
         })
       })
 
@@ -189,7 +202,7 @@ export default function EditBlogPost() {
 
               {/* Sidebar Settings */}
               <div className="space-y-8">
-                <Card className="border-2 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl sticky top-32">
+                <Card className="border-2 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl">
                   <CardHeader className="bg-muted/30 py-6 border-b">
                     <CardTitle className="text-lg font-black tracking-widest uppercase flex items-center gap-2">
                       Metadata
@@ -240,6 +253,38 @@ export default function EditBlogPost() {
                       <Button onClick={handleSubmit} disabled={saving} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl shadow-primary/20">
                         {saving ? 'Syncing...' : 'Update Transfer'}
                       </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Memorization Augmentation */}
+                <Card className="border-2 border-emerald-500/20 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl">
+                  <CardHeader className="bg-emerald-500/5 py-6 border-b border-emerald-500/10">
+                    <CardTitle className="text-sm font-black tracking-widest uppercase flex items-center gap-2 text-emerald-600">
+                      <Save className="h-4 w-4" />
+                      Cognitive Sync
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="recall" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Force Retrieval (one per line)</Label>
+                      <Textarea
+                        id="recall"
+                        placeholder="What is the primary conclusion?&#10;How does the system scale?"
+                        value={recallQuestions}
+                        onChange={(e) => setRecallQuestions(e.target.value)}
+                        className="min-h-[100px] text-xs font-medium bg-muted/30 border-2 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="mnemonics" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Memory Anchors (one per line)</Label>
+                      <Textarea
+                        id="mnemonics"
+                        placeholder="&quot;V-I-S-I-O-N&quot; — Velocity, Integration, Scalability..."
+                        value={mnemonics}
+                        onChange={(e) => setMnemonics(e.target.value)}
+                        className="min-h-[100px] text-xs font-medium bg-muted/30 border-2 rounded-xl italic"
+                      />
                     </div>
                   </CardContent>
                 </Card>

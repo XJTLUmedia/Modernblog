@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { LayoutDashboard, BookOpen, Sprout, Hammer, TrendingUp, Clock, CheckCircle, Target, Flame, Sparkles, Zap, Activity, ArrowRight } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { LayoutDashboard, BookOpen, Sprout, Hammer, TrendingUp, Clock, CheckCircle, Target, Flame, Sparkles, Zap, Activity, ArrowRight, Brain, Shield, Settings } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { motion, AnimatePresence } from 'framer-motion'
+import { NeuralOptimizationManual } from '@/components/NeuralOptimizationManual'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 
@@ -42,6 +43,22 @@ export default function HubPage() {
   const [hubData, setHubData] = useState<any>(null)
   const [recentActivity, setRecentActivity] = useState<any[]>([])
   const [activeProjects, setActiveProjects] = useState<any[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check')
+        if (res.ok) {
+          const data = await res.json()
+          setIsAdmin(data.isAdmin)
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err)
+      }
+    }
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,6 +98,8 @@ export default function HubPage() {
         ].sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime())
 
         setRecentActivity(combined.slice(0, 5).map(item => ({
+          id: item.id,
+          slug: item.slug,
           type: item.type,
           title: item.title,
           date: new Date(item.updatedAt || item.createdAt).toLocaleDateString(),
@@ -132,19 +151,26 @@ export default function HubPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-16"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-primary/10 p-2 rounded-xl">
-                <LayoutDashboard className="h-6 w-6 text-primary" />
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-primary/10 p-2 rounded-xl">
+                    <LayoutDashboard className="h-6 w-6 text-primary" />
+                  </div>
+                  <span className="text-sm font-black uppercase tracking-[0.3em] text-primary">Mission Control</span>
+                </div>
+                <h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tight leading-tight">
+                  The <span className="text-primary italic">Hub</span>.
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed font-medium">
+                  Real-time telemetry from the laboratory. Tracking research, active builds, and intellectual consumption.
+                </p>
               </div>
-              <span className="text-sm font-black uppercase tracking-[0.3em] text-primary">Mission Control</span>
             </div>
-            <h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tight leading-tight">
-              The <span className="text-primary italic">Hub</span>.
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed font-medium">
-              Real-time telemetry from the laboratory. Tracking research, active builds, and intellectual consumption.
-            </p>
           </motion.div>
+
+          {/* Neural Optimization Protocol */}
+          <NeuralOptimizationManual />
 
           {/* Core Metrics Grid */}
           <motion.div
@@ -184,9 +210,18 @@ export default function HubPage() {
               >
                 <Card className="border-2 rounded-[2rem] overflow-hidden bg-card/50 backdrop-blur-sm">
                   <CardHeader className="bg-primary/5 border-b-2 border-primary/10">
-                    <CardTitle className="text-sm font-black flex items-center gap-3 uppercase tracking-[0.2em] text-primary">
-                      <Target className="h-5 w-5" />
-                      Research Matrix
+                    <CardTitle className="text-sm font-black flex items-center justify-between uppercase tracking-[0.2em] text-primary w-full">
+                      <div className="flex items-center gap-3">
+                        <Target className="h-5 w-5" />
+                        Research Matrix
+                      </div>
+                      {isAdmin && (
+                        <Link href="/admin/hub">
+                          <Button variant="ghost" size="sm" className="h-8 gap-2 font-black text-[10px] border-2 border-primary/20 hover:bg-primary/5">
+                            <Zap className="h-3 w-3" /> Edit Matrix
+                          </Button>
+                        </Link>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-8 space-y-8">
@@ -275,10 +310,17 @@ export default function HubPage() {
                             <div className="p-3 rounded-xl bg-muted/50 group-hover:bg-primary/10 group-hover:text-primary transition-all">
                               <ActivityIcon className="h-5 w-5" />
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <Link href={`/${activity.type === 'garden' ? 'garden' : activity.type === 'project' ? 'forge' : 'blog'}/${activity.slug}`} className="flex-1 min-w-0">
                               <div className="text-sm font-black truncate">{activity.title}</div>
                               <div className="text-[10px] font-bold text-muted-foreground uppercase">{activity.date}</div>
-                            </div>
+                            </Link>
+                            {isAdmin && (
+                              <Link href={`/admin/${activity.type === 'garden' ? 'garden' : activity.type === 'project' ? 'projects' : 'posts'}/${activity.id}/edit`}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors">
+                                  <Zap className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                            )}
                           </div>
                         )
                       })}
@@ -295,9 +337,18 @@ export default function HubPage() {
               >
                 <Card className="border-2 rounded-[2rem] overflow-hidden bg-card/50 backdrop-blur-sm">
                   <CardHeader className="bg-emerald-500/5 border-b-2 border-emerald-500/10">
-                    <CardTitle className="text-sm font-black flex items-center gap-3 uppercase tracking-[0.2em] text-emerald-600">
-                      <BookOpen className="h-5 w-5" />
-                      Consumption Queue
+                    <CardTitle className="text-sm font-black flex items-center justify-between uppercase tracking-[0.2em] text-emerald-600 w-full">
+                      <div className="flex items-center gap-3">
+                        <BookOpen className="h-5 w-5" />
+                        Consumption Queue
+                      </div>
+                      {isAdmin && (
+                        <Link href="/admin/hub">
+                          <Button variant="ghost" size="sm" className="h-8 gap-2 font-black text-[10px] border-2 border-emerald-500/20 hover:bg-emerald-50">
+                            <Zap className="h-3 w-3 text-emerald-600" /> Edit Queue
+                          </Button>
+                        </Link>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">

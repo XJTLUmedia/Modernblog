@@ -177,7 +177,7 @@ export default function ProjectsList() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Link href={`/projects/${project.slug}`} className="flex-1">
+                          <Link href={`/forge/${project.slug}`} className="flex-1">
                             <Button variant="outline" size="sm" className="w-full gap-2 border-2 hover:bg-purple-50 hover:text-purple-600 border-purple-500/20">
                               <Eye className="h-4 w-4" />
                               View

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
                 authorEmail: user.email
             },
             include: {
-                author: { select: { name: true } }
+                author: { select: { name: true, email: true } }
             }
         })
 

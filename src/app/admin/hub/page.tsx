@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Save, Plus, Trash2, BookOpen, Target, Music, Github } from 'lucide-react'
+import { ArrowLeft, Save, Plus, Trash2, BookOpen, Target, Music, Github, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -141,6 +141,98 @@ export default function AdminHub() {
                     </motion.div>
 
                     <div className="space-y-12">
+                        {/* Introduction / Big Picture */}
+                        <motion.section
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                        >
+                            <Card className="border-2 shadow-xl overflow-hidden">
+                                <CardHeader className="border-b bg-muted/30 py-6">
+                                    <CardTitle className="flex items-center gap-2 text-2xl font-black tracking-tight">
+                                        <div className="p-2 bg-rose-500/10 rounded-xl">
+                                            <Heart className="h-6 w-6 text-rose-600" />
+                                        </div>
+                                        The Big Picture (Introduction)
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-8">
+                                    <div className="space-y-3">
+                                        <Label className="font-bold text-sm tracking-wide uppercase text-muted-foreground">Contextual Narrative</Label>
+                                        <Textarea
+                                            value={hubData.content}
+                                            onChange={(e) => setHubData(prev => ({ ...prev, content: e.target.value }))}
+                                            placeholder="What are you focused on this month? (Markdown supported)"
+                                            className="min-h-[200px] text-lg border-2 rounded-2xl focus-visible:ring-rose-500/20 leading-relaxed"
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </motion.section>
+
+                        {/* GitHub Repositories Section */}
+                        <motion.section
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.05 }}
+                        >
+                            <Card className="border-2 shadow-xl overflow-hidden">
+                                <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 py-6">
+                                    <CardTitle className="flex items-center gap-2 text-2xl font-black tracking-tight">
+                                        <div className="p-2 bg-zinc-900/10 rounded-xl">
+                                            <Github className="h-6 w-6 text-zinc-900" />
+                                        </div>
+                                        Active GitHub Build-log
+                                    </CardTitle>
+                                    <Button variant="outline" size="sm" onClick={() => addItem('githubRepos', { name: '', description: '', url: '' })} className="border-2 font-bold hover:bg-zinc-100 transition-all">
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Index Repository
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="space-y-6 pt-8">
+                                    {hubData.githubRepos.map((repo: any, index: number) => (
+                                        <div key={index} className="space-y-6 p-6 border-2 rounded-2xl bg-muted/10 relative group">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                <div className="space-y-3">
+                                                    <Label className="font-bold text-sm tracking-wide uppercase text-muted-foreground">Repository Name</Label>
+                                                    <Input
+                                                        value={repo.name}
+                                                        onChange={(e) => updateItem('githubRepos', index, 'name', e.target.value)}
+                                                        placeholder="e.g. personal-ai-assistant"
+                                                        className="h-12 border-2 rounded-xl focus-visible:ring-zinc-900/20"
+                                                    />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <Label className="font-bold text-sm tracking-wide uppercase text-muted-foreground">Access Port (URL)</Label>
+                                                    <Input
+                                                        value={repo.url}
+                                                        onChange={(e) => updateItem('githubRepos', index, 'url', e.target.value)}
+                                                        placeholder="https://github.com/username/repo"
+                                                        className="h-12 border-2 rounded-xl focus-visible:ring-zinc-900/20"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <Label className="font-bold text-sm tracking-wide uppercase text-muted-foreground">Mission Brief (Description)</Label>
+                                                <Input
+                                                    value={repo.description}
+                                                    onChange={(e) => updateItem('githubRepos', index, 'description', e.target.value)}
+                                                    placeholder="Focusing on decentralized identity protocols..."
+                                                    className="h-12 border-2 rounded-xl focus-visible:ring-zinc-900/20"
+                                                />
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-destructive hover:bg-destructive/10 sm:relative sm:top-0 sm:right-0" onClick={() => removeItem('githubRepos', index)}>
+                                                <Trash2 className="h-5 w-5" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    {hubData.githubRepos.length === 0 && (
+                                        <div className="text-center py-12 border-2 border-dashed rounded-2xl border-muted-foreground/20">
+                                            <p className="text-muted-foreground font-medium">No repositories indexed. Reference your active codebases here.</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.section>
                         {/* Currently Learning */}
                         <motion.section
                             initial={{ opacity: 0, y: 30 }}

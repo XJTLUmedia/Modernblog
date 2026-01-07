@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, slug, content, status, tags } = body
+    const { title, slug, content, status, tags, recallQuestions, reviewInterval } = body
 
     // Verify admin status (checks database if cookies are stale)
     const { isAdmin, userId } = await verifyAdmin(request)
@@ -58,22 +58,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const noteSlug = slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\s-]+/g, '-')
+
+    // Check if slug already exists
+    const existingNote = await prisma.gardenNote.findUnique({
+      where: { slug: noteSlug }
+    })
+
+    if (existingNote) {
+      return NextResponse.json(
+        { error: 'A garden note with this slug already exists. Please use a different slug.' },
+        { status: 409 }
+      )
+    }
+
     // Create garden note
     const note = await prisma.gardenNote.create({
       data: {
         title,
-        slug: slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\s-]+/g, '-'),
+        slug: noteSlug,
         content,
         status: status || 'seedling',
         authorId: userId,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        // @ts-ignore
+        recallQuestions: recallQuestions || null,
+        reviewInterval: reviewInterval || 1
       }
     })
 
     // Handle tags if provided
     if (tags && Array.isArray(tags)) {
-      for (const tagName of tags) {
+      const normalizedTags = tags.map(t => typeof t === 'string' ? t : t.name).filter(Boolean)
+      for (const tagName of normalizedTags) {
         let tag = await prisma.tag.findUnique({
           where: { name: tagName }
         })
@@ -102,10 +120,19 @@ export async function POST(request: NextRequest) {
       success: true,
       note
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating garden note:', error)
+
+    // Handle Prisma unique constraint errors
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A garden note with this slug already exists. Please use a different slug.' },
+        { status: 409 }
+      )
+    }
+
     return NextResponse.json(
-      { error: 'Failed to create garden note' },
+      { error: error.message || 'Failed to create garden note' },
       { status: 500 }
     )
   }
@@ -114,7 +141,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, title, slug, content, status, tags } = body
+    const { id, title, slug, content, status, tags, recallQuestions, reviewInterval } = body
 
     // Verify admin status (checks database if cookies are stale)
     const { isAdmin, userId } = await verifyAdmin(request)
@@ -126,28 +153,53 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    const updateData: any = {
+      ...(title && { title }),
+      ...(content && { content }),
+      ...(status && { status }),
+      ...(recallQuestions !== undefined && { recallQuestions }),
+      ...(reviewInterval !== undefined && { reviewInterval }),
+      updatedAt: new Date()
+    }
+
+    if (slug) {
+      const noteSlug = slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\s-]+/g, '-')
+
+      // Check if slug is taken by another note
+      if (noteSlug) {
+        const existingNote = await prisma.gardenNote.findFirst({
+          where: {
+            slug: noteSlug,
+            NOT: { id: id }
+          }
+        })
+
+        if (existingNote) {
+          return NextResponse.json(
+            { error: 'This slug is already in use by another garden note.' },
+            { status: 409 }
+          )
+        }
+
+        updateData.slug = noteSlug
+      }
+    }
+
     const note = await prisma.gardenNote.update({
       where: { id },
-      data: {
-        ...(title && { title }),
-        ...(slug && {
-          slug: slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\s-]+/g, '-')
-        }),
-        ...(content && { content }),
-        ...(status && { status }),
-        updatedAt: new Date()
-      }
+      data: updateData
     })
 
     // Handle tags if provided
     if (tags && Array.isArray(tags)) {
+      const normalizedTags = tags.map(t => typeof t === 'string' ? t : t.name).filter(Boolean)
       // Remove existing tags
       await prisma.gardenNoteTag.deleteMany({
         where: { gardenNoteId: id }
       })
 
       // Add new tags
-      for (const tagName of tags) {
+      for (const tagName of normalizedTags) {
         let tag = await prisma.tag.findUnique({
           where: { name: tagName }
         })
@@ -175,10 +227,19 @@ export async function PATCH(request: NextRequest) {
       success: true,
       note
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating garden note:', error)
+
+    // Handle Prisma unique constraint errors
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'This slug is already in use by another garden note.' },
+        { status: 409 }
+      )
+    }
+
     return NextResponse.json(
-      { error: 'Failed to update garden note' },
+      { error: error.message || 'Failed to update garden note' },
       { status: 500 }
     )
   }

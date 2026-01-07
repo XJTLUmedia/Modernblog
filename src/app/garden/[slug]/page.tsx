@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { Sprout, ArrowLeft, Calendar, Eye, Clock, Share2, Sparkles } from 'lucide-react'
+import { Sprout, ArrowLeft, Calendar, Eye, Clock, Share2, Sparkles, Zap, Loader2, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +13,8 @@ import { Footer } from '@/components/Footer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShareButton } from '@/components/ShareButton'
 import { SubscribeButton } from '@/components/SubscribeButton'
+import { safeJsonParse } from '@/lib/utils'
+import ReactMarkdown from 'react-markdown'
 
 const statusConfig = {
   seedling: { label: 'Seedling', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: '🌱' },
@@ -24,8 +26,52 @@ export default function GardenNotePage() {
   const params = useParams()
   const slug = params?.slug as string
   const [note, setNote] = useState<any>(null)
+  const [isBirthday, setIsBirthday] = useState(false)
+
+  useEffect(() => {
+    const checkBirthday = async () => {
+      try {
+        const res = await fetch('/api/admin/settings')
+        if (res.ok) {
+          const settings = await res.json()
+          if (settings.birthday) {
+            const bday = new Date(settings.birthday)
+            const today = new Date()
+            if (bday.getMonth() === today.getMonth() && bday.getDate() === today.getDate()) {
+              setIsBirthday(true)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking birthday:', error)
+      }
+    }
+    checkBirthday()
+  }, [])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showRecall, setShowRecall] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [userAnswer, setUserAnswer] = useState('')
+  const [feedback, setFeedback] = useState<string | null>(null)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [dynamicQuestions, setDynamicQuestions] = useState<string[]>([])
+  const [isFetchingQuestions, setIsFetchingQuestions] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check')
+        if (res.ok) {
+          const data = await res.json()
+          setIsAdmin(data.isAdmin)
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err)
+      }
+    }
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     if (!slug) return
@@ -50,6 +96,59 @@ export default function GardenNotePage() {
 
     fetchNote()
   }, [slug])
+
+  useEffect(() => {
+    if (note && !note.recallQuestions && !isFetchingQuestions) {
+      const fetchQuestions = async () => {
+        setIsFetchingQuestions(true)
+        try {
+          const res = await fetch('/api/ai/recall-questions', {
+            method: 'POST',
+            body: JSON.stringify({ title: note.title, content: note.content })
+          })
+          const data = await res.json()
+          if (data.questions) setDynamicQuestions(data.questions)
+        } catch (e) {
+          console.error('Failed to fetch dynamic questions', e)
+        } finally {
+          setIsFetchingQuestions(false)
+        }
+      }
+      fetchQuestions()
+    } else if (note?.recallQuestions) {
+      try {
+        setDynamicQuestions(safeJsonParse(note.recallQuestions))
+      } catch (e) {
+        setDynamicQuestions([])
+      }
+    }
+  }, [note])
+
+  const handleVerify = async () => {
+    if (!userAnswer.trim()) return
+    setIsVerifying(true)
+    try {
+      const questions = safeJsonParse(note.recallQuestions || '[]')
+      const question = questions[0] || "What is this note about?"
+      const response = await fetch('/api/ai/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          answer: userAnswer,
+          context: note.content
+        })
+      })
+      const data = await response.json()
+      setFeedback(data.feedback)
+      setShowRecall(true)
+    } catch (err) {
+      console.error('Verification failed:', err)
+      setFeedback("Neural sync failed. Try again.")
+    } finally {
+      setIsVerifying(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -117,6 +216,14 @@ export default function GardenNotePage() {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-2"
               >
+                {isAdmin && (
+                  <Link href={`/admin/garden/${note.id}/edit`}>
+                    <Button variant="outline" size="sm" className="gap-2 font-black border-2 border-emerald-500/20 hover:bg-emerald-50 rounded-xl">
+                      <Zap className="h-4 w-4 text-emerald-600" />
+                      Edit Seed
+                    </Button>
+                  </Link>
+                )}
                 <ShareButton
                   title={note.title}
                   text={note.summary || "Check out this note."}
@@ -127,7 +234,7 @@ export default function GardenNotePage() {
               </motion.div>
             </div>
 
-            {/* Note Header */}
+            {/* Note Header ... */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -169,7 +276,7 @@ export default function GardenNotePage() {
               </div>
             </motion.div>
 
-            {/* AI Summary Card (Optional/Design consistency) */}
+            {/* AI Summary Card ... */}
             {note.summary && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -186,65 +293,168 @@ export default function GardenNotePage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-emerald-700/80 leading-relaxed font-medium italic">
-                      {note.summary}
-                    </p>
+                    <div className="text-emerald-700/80 leading-relaxed font-medium italic prose-emerald dark:prose-invert max-w-none text-sm">
+                      <ReactMarkdown>{note.summary}</ReactMarkdown>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
             )}
 
-            {/* Note Content */}
+            {/* Neural integration System - Spaced Repetition & Recall */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="relative"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6"
             >
-              <div className="prose prose-lg dark:prose-invert max-w-none 
-                prose-headings:font-black prose-headings:tracking-tight 
-                prose-p:leading-relaxed prose-p:text-muted-foreground/90
-                prose-strong:text-foreground prose-em:text-emerald-600/80
-                prose-blockquote:border-emerald-500 prose-blockquote:bg-emerald-500/5 
-                prose-blockquote:rounded-r-xl prose-blockquote:py-1 prose-blockquote:px-6">
-                {note.content ? (
-                  <div className="whitespace-pre-wrap">
-                    {note.content}
+              {/* Spaced Repetition Tracker */}
+              <Card className="border-2 border-primary/20 bg-primary/5 rounded-3xl overflow-hidden shadow-xl shadow-primary/5">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-primary">
+                    <Clock className="h-3 w-3" />
+                    Review Schedule (7-3-2-1)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <div className="space-y-1">
+                      <div className="text-2xl font-black text-primary">Stage {note.reviewInterval || 1}</div>
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase">Integration Deepening</div>
+                    </div>
+                    <Badge className="bg-primary/20 text-primary border-none font-black text-[10px]">SYNCED</Badge>
                   </div>
-                ) : (
-                  <div className="text-center py-12 bg-muted/20 rounded-3xl border-2 border-dashed">
-                    <p className="text-muted-foreground italic font-bold">The gardener hasn't added details to this note yet.</p>
+                  <div className="flex gap-2">
+                    {[1, 1, 0, 0].map((active, i) => (
+                      <div key={i} className={`h-2 flex-1 rounded-full ${active ? 'bg-primary shadow-[0_0_8px_#10b981]' : 'bg-primary/10'}`} />
+                    ))}
                   </div>
-                )}
-              </div>
+                  <p className="text-xs font-medium text-muted-foreground leading-relaxed italic">
+                    Spaced repetition maintains synaptic strength. Set a reminder to revisit this node in <strong>{note.reviewInterval || 2} days</strong>.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Active Recall Challenge */}
+              <Card className="border-2 border-emerald-500/20 bg-emerald-500/5 rounded-3xl overflow-hidden shadow-xl shadow-emerald-500/5 hover:border-emerald-500/40 transition-all group">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-emerald-600">
+                    <Zap className="h-3 w-3" />
+                    Recall Challenge
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isFetchingQuestions ? (
+                    <div className="flex items-center gap-2 p-3 rounded-xl border border-emerald-500/10 bg-white/40 animate-pulse text-[10px] font-bold text-emerald-600/60">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Tailoring neural hooks...
+                    </div>
+                  ) : (
+                    <p className="text-sm font-bold text-emerald-800/80 leading-relaxed">
+                      Test your retrieval: <strong>"{dynamicQuestions[0] || "What core principle does this note address?"}"</strong>
+                    </p>
+                  )}
+
+                  <div className="space-y-3">
+                    <textarea
+                      value={userAnswer}
+                      onChange={(e) => setUserAnswer(e.target.value)}
+                      placeholder="Type your answer here to integrate knowledge..."
+                      className="w-full min-h-[80px] bg-white/50 dark:bg-zinc-900/50 rounded-xl border-2 border-emerald-500/10 p-4 text-sm focus:border-emerald-500/30 outline-none transition-all resize-none"
+                    />
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleVerify}
+                        disabled={isVerifying || !userAnswer.trim()}
+                        className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                      >
+                        {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify with AI'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowRecall(!showRecall)
+                        }}
+                        className="h-10 border-emerald-500/20 bg-white/50 hover:bg-emerald-50 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all"
+                      >
+                        {showRecall ? 'Secure' : 'Reveal & Unlock'}
+                      </Button>
+                    </div>
+
+                    <AnimatePresence>
+                      {showRecall && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="pt-2 space-y-6"
+                        >
+                          <div className="prose-emerald dark:prose-invert max-w-none text-xs border-b border-emerald-500/10 pb-4 italic">
+                            {feedback ? (
+                              <ReactMarkdown>{feedback}</ReactMarkdown>
+                            ) : (
+                              "Attempt a retrieval answer to activate the AI feedback loop. Explaining concepts in your own words leverages the Feynman Technique for 3x retention."
+                            )}
+                          </div>
+
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.4 }}
+                            className="prose prose-sm dark:prose-invert max-w-none 
+                              prose-headings:font-black prose-headings:tracking-tight 
+                              prose-p:leading-relaxed prose-p:text-muted-foreground/90
+                              prose-strong:text-foreground prose-em:text-emerald-600/80
+                              prose-blockquote:border-emerald-500 prose-blockquote:bg-emerald-500/5 
+                              prose-blockquote:rounded-r-xl prose-blockquote:py-1 prose-blockquote:px-6"
+                          >
+                            <div className="flex items-center gap-2 mb-4 text-[10px] font-black text-emerald-600 uppercase tracking-[0.4em] opacity-50">
+                              <Zap className="h-3 w-3 fill-emerald-600" /> Neural Link Established
+                            </div>
+                            {note.content ? (
+                              <ReactMarkdown>{note.content}</ReactMarkdown>
+                            ) : (
+                              <div className="text-center py-6 bg-muted/20 rounded-xl border-2 border-dashed">
+                                <p className="text-muted-foreground italic font-bold">The gardener hasn't added details to this note yet.</p>
+                              </div>
+                            )}
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
 
-            <Separator className="my-16" />
+            {/* Note Content Area - MOVED INSIDE RECALL */}
+          </div>
 
-            {/* Footer / Meta */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-20 text-sm font-bold text-muted-foreground">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                  <Sprout className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-foreground">Cultivated by {note.author?.name || 'Gardener'}</div>
-                  <div className="text-xs opacity-70">A living node in the digital garden</div>
-                </div>
+          <Separator className="my-16" />
+
+          {/* Footer / Meta */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-20 text-sm font-bold text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                <Sprout className="h-5 w-5" />
               </div>
-              <div className="flex items-center gap-4">
-                <ShareButton
-                  title={note.title}
-                  text={note.summary || "Check out this note from the garden."}
-                  className="rounded-full px-6 border-2 transition-all"
-                />
-                <SubscribeButton
-                  category="garden"
-                  className="rounded-full px-6 border-2 hover:bg-emerald-500 hover:text-white transition-all"
-                >
-                  Subscribe for updates
-                </SubscribeButton>
+              <div>
+                <div className="text-foreground">Cultivated by {note.author?.name || 'Gardener'}</div>
+                <div className="text-xs opacity-70">A living node in the digital garden</div>
               </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <ShareButton
+                title={note.title}
+                text={note.summary || "Check out this note from the garden."}
+                className="rounded-full px-6 border-2 transition-all"
+              />
+              <SubscribeButton
+                category="garden"
+                className="rounded-full px-6 border-2 hover:bg-emerald-500 hover:text-white transition-all"
+              >
+                Subscribe for updates
+              </SubscribeButton>
             </div>
           </div>
         </div>

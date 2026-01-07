@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { BookOpen, Calendar, Clock, ArrowRight } from 'lucide-react'
+import { BookOpen, Calendar, Clock, ArrowRight, Zap, Plus } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,22 @@ import { Footer } from '@/components/Footer'
 export default function BlogPage() {
   const [posts, setPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check')
+        if (res.ok) {
+          const data = await res.json()
+          setIsAdmin(data.isAdmin)
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err)
+      }
+    }
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -58,12 +74,24 @@ export default function BlogPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-16"
           >
-            <h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tight">
-              The <span className="text-primary italic">Surface</span>.
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
-              Polished, long-form thoughts and opinions on technology, development, and innovation.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+              <div className="flex-1">
+                <h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tight">
+                  The <span className="text-primary italic">Surface</span>.
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
+                  Polished, long-form thoughts and opinions on technology, development, and innovation.
+                </p>
+              </div>
+              {isAdmin && (
+                <Link href="/admin/posts/new">
+                  <Button className="h-16 px-8 gap-3 font-black rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+                    <Plus className="h-5 w-5" />
+                    Archive New Manuscript
+                  </Button>
+                </Link>
+              )}
+            </div>
           </motion.div>
 
           {/* Posts Grid */}
@@ -124,12 +152,21 @@ export default function BlogPage() {
                           </div>
                         )}
                       </div>
-                      <Link href={`/blog/${post.slug}`} className="block">
-                        <Button className="w-full gap-2 font-bold shadow-lg shadow-primary/20 group-hover:scale-[1.02] transition-transform">
-                          Read Full Article
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </Link>
+                      <div className="flex gap-2">
+                        <Link href={`/blog/${post.slug}`} className="flex-1">
+                          <Button className="w-full gap-2 font-bold shadow-lg shadow-primary/20 group-hover:scale-[1.02] transition-transform">
+                            Read Full Article
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        {isAdmin && (
+                          <Link href={`/admin/posts/${post.id}/edit`}>
+                            <Button variant="outline" size="icon" className="h-10 w-10 border-2 border-primary/20 hover:bg-primary/5 rounded-xl">
+                              <Zap className="h-4 w-4 text-primary" />
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>

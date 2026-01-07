@@ -26,6 +26,9 @@ export default function NewProject() {
   const [progress, setProgress] = useState('0')
   const [priority, setPriority] = useState('medium')
   const [techStack, setTechStack] = useState('')
+  const [studyChunks, setStudyChunks] = useState('')
+  const [mnemonics, setMnemonics] = useState('')
+  const [recallQuestions, setRecallQuestions] = useState('')
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +54,10 @@ export default function NewProject() {
           order: parseInt(order) || 0,
           progress: parseInt(progress) || 0,
           priority: priority,
-          techStack: techStackArray
+          techStack: techStackArray,
+          studyChunks: studyChunks ? JSON.stringify(studyChunks.split('\n').filter(s => s.trim())) : null,
+          mnemonics: mnemonics ? JSON.stringify(mnemonics.split('\n').filter(s => s.trim())) : null,
+          recallQuestions: recallQuestions ? JSON.stringify(recallQuestions.split('\n').filter(s => s.trim())) : null
         })
       })
 
@@ -195,7 +201,7 @@ export default function NewProject() {
 
               {/* Sidebar Settings */}
               <div className="space-y-8">
-                <Card className="border-2 border-blue-100 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl sticky top-32">
+                <Card className="border-2 border-blue-100 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl">
                   <CardHeader className="bg-blue-50/30 py-6 border-b border-blue-100">
                     <CardTitle className="text-lg font-black tracking-widest uppercase flex items-center gap-2 text-blue-900">
                       Blueprint Settings
@@ -282,6 +288,55 @@ export default function NewProject() {
                           </span>
                         ) : 'Ignite Forge'}
                       </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Neural Sync Protocol */}
+                <Card className="border-2 border-emerald-100 rounded-[2rem] overflow-hidden shadow-xl bg-card/50 backdrop-blur-xl">
+                  <CardHeader className="bg-emerald-50/30 py-6 border-b border-emerald-100">
+                    <CardTitle className="text-lg font-black tracking-widest uppercase flex items-center gap-2 text-emerald-900">
+                      Neural Sync Protocol
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="studyChunks" className="text-[10px] font-black uppercase tracking-widest text-emerald-800/60 text-emerald-900/60">
+                        System Decomposition (one per line)
+                      </Label>
+                      <Textarea
+                        id="studyChunks"
+                        placeholder="Internal API&#10;Neural Interface&#10;Persistence Layer"
+                        value={studyChunks}
+                        onChange={(e) => setStudyChunks(e.target.value)}
+                        className="min-h-[100px] border-2 border-emerald-100 rounded-xl bg-emerald-50/10 text-sm font-medium"
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label htmlFor="mnemonics" className="text-[10px] font-black uppercase tracking-widest text-emerald-800/60 text-emerald-900/60">
+                        Memory Anchors (one per line)
+                      </Label>
+                      <Textarea
+                        id="mnemonics"
+                        placeholder="&quot;Sync, Sec, Forge&quot; — Synchronize, Secure, Forge"
+                        value={mnemonics}
+                        onChange={(e) => setMnemonics(e.target.value)}
+                        className="min-h-[100px] border-2 border-emerald-100 rounded-xl bg-emerald-50/10 text-sm font-medium italic"
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label htmlFor="recallQuestions" className="text-[10px] font-black uppercase tracking-widest text-emerald-800/60 text-emerald-900/60">
+                        Force Retrieval (one per line)
+                      </Label>
+                      <Textarea
+                        id="recallQuestions"
+                        placeholder="What is the primary execution loop?&#10;How are nodes secured?"
+                        value={recallQuestions}
+                        onChange={(e) => setRecallQuestions(e.target.value)}
+                        className="min-h-[100px] border-2 border-emerald-100 rounded-xl bg-emerald-50/10 text-sm font-medium"
+                      />
                     </div>
                   </CardContent>
                 </Card>

@@ -31,6 +31,46 @@ export default function ProjectPage() {
   const [showAnchors, setShowAnchors] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isBirthday, setIsBirthday] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const enrichProjectWithAI = async (projectData: any) => {
+    if (projectData.studyChunks && projectData.mnemonics) return;
+
+    setIsGenerating(true);
+    try {
+      // 1. First Call: Architectural Chunking
+      const chunkRes = await fetch('/api/ai/chunk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: projectData.title, content: projectData.description })
+      });
+      const cData = await chunkRes.json();
+
+      // Update state partially so the UI feels responsive
+      setProject((prev: any) => ({
+        ...prev,
+        studyChunks: JSON.stringify(cData.chunks)
+      }));
+
+      // 2. Second Call: Memory Anchor (starts only AFTER the first is done)
+      const mnemonicRes = await fetch('/api/ai/mnemonic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: projectData.title, content: projectData.description })
+      });
+      const mData = await mnemonicRes.json();
+
+      setProject((prev: any) => ({
+        ...prev,
+        mnemonics: JSON.stringify(mData.mnemonics)
+      }));
+
+    } catch (err) {
+      console.error("AI Enrichment Error:", err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     if (!slug) return
@@ -42,6 +82,7 @@ export default function ProjectPage() {
 
         if (response.ok && !data.error) {
           setProject(data)
+          enrichProjectWithAI(data)
         } else {
           setError(data.error || 'Project not found')
         }
@@ -225,10 +266,6 @@ export default function ProjectPage() {
                           {project.viewCount || 0} Pulses
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Status Code</div>
-                        <div className="font-bold text-primary">v1.2.0-beta</div>
-                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -249,11 +286,14 @@ export default function ProjectPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex flex-wrap gap-2">
-                        {techStack.map((tech: any, i: number) => (
-                          <Badge key={i} variant="secondary" className="bg-background border-2 border-primary/10 font-bold px-3 py-1">
-                            {typeof tech === 'string' ? tech : tech.name}
-                          </Badge>
-                        ))}
+                        {techStack.map((tech: any, i: number) => {
+                          const techName = typeof tech === 'string' ? tech : tech.name;
+                          return (
+                            <Badge key={`${techName}-${i}`} variant="secondary" className="bg-background border-2 border-primary/10 font-bold px-3 py-1">
+                              {techName}
+                            </Badge>
+                          );
+                        })}
                       </div>
 
                       <Separator className="bg-primary/10" />
@@ -321,12 +361,19 @@ export default function ProjectPage() {
                     Breaking this build into manageable mental nodes for easier pattern recognition.
                   </p>
                   <div className="space-y-3">
-                    {safeJsonParse(project.studyChunks, ["Core Internal API", "Neural Link Interface", "Data Persistence Layer"]).map((chunk: string, i: number) => (
-                      <div key={i} className="flex items-center gap-3 p-3 bg-white/50 dark:bg-zinc-900/50 rounded-xl border border-amber-500/10">
-                        <div className="h-2 w-2 rounded-full bg-amber-500" />
-                        <span className="font-bold text-sm">{chunk}</span>
+                    {isGenerating ? (
+                      <div className="animate-pulse space-y-2">
+                        <div className="h-10 bg-amber-500/10 rounded-xl" />
+                        <div className="h-10 bg-amber-500/10 rounded-xl" />
                       </div>
-                    ))}
+                    ) : (
+                      safeJsonParse(project.studyChunks, ["Analyzing Nodes..."]).map((chunk: string, i: number) => (
+                        <div key={i} className="flex items-center gap-3 p-3 bg-white/50 dark:bg-zinc-900/50 rounded-xl border border-amber-500/10">
+                          <div className="h-2 w-2 rounded-full bg-amber-500" />
+                          <span className="font-bold text-sm">{chunk}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -342,7 +389,7 @@ export default function ProjectPage() {
                 </CardHeader>
                 <CardContent className="p-8 pt-0 space-y-6">
                   <div className="p-5 bg-blue-500/10 rounded-2xl border-2 border-blue-500/20 italic font-bold text-blue-700 dark:text-blue-300">
-                    {safeJsonParse(project.mnemonics, ["\"Sync, Sec, Forge\" — Synchronize state, Secure the node, Forge the output."])[0]}
+                    {isGenerating ? "Synthesizing Mnemonic..." : safeJsonParse(project.mnemonics, ["Encoding..."])[0]}
                   </div>
                   <p className="text-xs font-medium text-muted-foreground leading-relaxed mb-6">
                     Use this mnemonic to recall the primary execution loop of this system's architecture.

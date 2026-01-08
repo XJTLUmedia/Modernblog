@@ -8,6 +8,8 @@ import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import ReactMarkdown from 'react-markdown'
 
 const cogData: Record<string, any> = {
     'active-recall': {
@@ -249,7 +251,7 @@ export default function CogTheoryPage() {
                                 <div className="flex items-center gap-2 mb-10 text-[10px] font-black text-primary uppercase tracking-[0.4em] opacity-50">
                                     <Activity className="h-3 w-3" /> Core Cognitive Logic Synchronized
                                 </div>
-                                {data.content.trim()}
+                                <ReactMarkdown>{data.content.trim()}</ReactMarkdown>
                             </div>
                         </motion.div>
 

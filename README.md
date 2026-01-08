@@ -69,7 +69,13 @@ npx prisma db push
 Create admin account:
 
 ```bash
-node temp-seed.cjs
+npx prisma db seed
+```
+
+Check if admin exist (optional):
+
+```bash
+npx prisma studio
 ```
 
 ### 3. Development Server

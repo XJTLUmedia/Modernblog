@@ -1,7 +1,7 @@
 
 ---
 
-# ModernBlog: A Nexus for Growth & Intelligence
+# ModernBlog: AI blog for you to review your knowledge
 
 ModernBlog is a high-performance, AI-augmented platform designed for thinkers, learners, and creators. It blends professional engineering with personal development tools, creating a digital garden that grows alongside you.
 

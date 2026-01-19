@@ -88,10 +88,23 @@ Start the local development environment:
 
 ```bash
 npm run dev
-
 ```
 
 The application will be accessible at `http://localhost:3000`.
+
+### 4. Future Consideration
+
+I still lack of ideas on how to integrate (AI image and AI video into summary and reflection part). Therefore, although there are AI generation tool there, it is not fully functional.
+
+Meanwhile, I am lacking ideas on badge creation, I am thinking about a custom badge for admin to add themselves, but that would require some editor logic. I have no idea yet. 
+
+If you would like to contribute, think about improving this part. I would be deeply appreciate if you can further improve this project. 
+
+
+
+
+
+
 
 ---
 

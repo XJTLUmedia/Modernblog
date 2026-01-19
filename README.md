@@ -1,13 +1,16 @@
 
 ---
 
-# ModernBlog: A Nexus for Growth & Intelligence
+# ModernBlog: AI blog for you to review your knowledge
 
 ModernBlog is a high-performance, AI-augmented platform designed for thinkers, learners, and creators. It blends professional engineering with personal development tools, creating a digital garden that grows alongside you.
 
 ## The Vision
 
 ModernBlog isn't just a content management system; it’s an intellectual partner. By combining the **Next.js 15** ecosystem with **AI Services**, it transforms static writing into an interactive journey of self-improvement and discovery.
+<img width="1856" height="752" alt="Screenshot 2026-01-11 104551" src="https://github.com/user-attachments/assets/d53aae7a-5399-43b4-9ff5-326ef6ebae8e" />
+<img width="1822" height="745" alt="Screenshot 2026-01-11 104822" src="https://github.com/user-attachments/assets/39eec852-31bd-44c4-96db-e8ca6a9b6623" />
+<img width="1773" height="665" alt="Screenshot 2026-01-11 104749" src="https://github.com/user-attachments/assets/9215bff0-6279-4a55-8e10-afe3f20a6ed4" />
 
 ---
 
@@ -26,6 +29,7 @@ ModernBlog is designed to integrate seamlessly with LLMs (OpenAI, Anthropic) to 
 * **Intelligent Summarization:** Automatically distill long-form reflections into actionable insights.
 * **Semantic Search:** Find connections between your past thoughts using vector-based search.
 * **Growth Analytics:** AI-driven tracking of personal milestones and writing patterns.
+<img width="1661" height="857" alt="Screenshot 2026-01-11 104233" src="https://github.com/user-attachments/assets/7f33d8de-3cde-4e0d-b34f-7f28abe3b0f3" />
 
 ---
 

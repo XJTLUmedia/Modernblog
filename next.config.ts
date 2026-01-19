@@ -1,6 +1,8 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  output: "standalone",
+
   async headers() {
     return [
       {
@@ -21,29 +23,30 @@ const nextConfig: NextConfig = {
               "form-action 'self'",
               "base-uri 'self'",
               "manifest-src 'self'",
-              "object-src 'none'"
-            ].join("; ")
-          }
-        ]
-      }
+              "object-src 'none'",
+            ].join("; "),
+          },
+        ],
+      },
     ]
   },
 
   reactStrictMode: false,
+
   async redirects() {
     return [
       {
-        source: '/projects',
-        destination: '/forge',
+        source: "/projects",
+        destination: "/forge",
         permanent: true,
       },
       {
-        source: '/projects/:slug',
-        destination: '/forge/:slug',
+        source: "/projects/:slug",
+        destination: "/forge/:slug",
         permanent: true,
-      }
+      },
     ]
-  }
+  },
 }
 
 export default nextConfig

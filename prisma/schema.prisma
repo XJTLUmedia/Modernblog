@@ -12,6 +12,7 @@ datasource db {
 
 // User model for authentication and user management
 model User {
+<<<<<<< Updated upstream
   id              String    @id @default(cuid())
   email           String    @unique
   password        String    // Hashed password for authentication
@@ -44,6 +45,36 @@ model User {
   badges          UserBadge[]
   bookmarks       Bookmark[]
   aiArtifacts     AIArtifact[]
+=======
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String?
+  googleId          String?   @unique
+
+  name              String?
+  avatar            String?   // ← add this
+  bio               String?
+  website           String?
+
+  resetToken        String?
+  resetTokenExpires DateTime?
+  role              String    @default("user")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations...
+  posts             Post[]
+  gardenNotes       GardenNote[]
+  projects          Project[]
+  comments          Comment[]
+  guestbookEntries  GuestbookEntry[]
+  reactions         Reaction[]
+  followers         Follow[]       @relation("UserFollowers")
+  following         Follow[]       @relation("UserFollowing")
+  subscriptions     Subscription[]
+  badges            UserBadge[]
+  bookmarks         Bookmark[]
+>>>>>>> Stashed changes
 }
 
 // Site-wide configuration and feature toggles

@@ -1,0 +1,21 @@
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx
+    container_name: convertx
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  modernblog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: modernblog:local
+    container_name: modernblog
+    env_file:
+      - .env
+    ports:
+      - "3100:3000"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

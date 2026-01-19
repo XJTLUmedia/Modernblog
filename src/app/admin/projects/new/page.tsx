@@ -13,9 +13,13 @@ import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { AIAssetsModal } from '@/components/ai/AIAssetsModal'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function NewProject() {
   const router = useRouter()
+  const { user } = useAuth()
+  const userId = user?.id || ""
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
@@ -156,7 +160,10 @@ export default function NewProject() {
                     </div>
 
                     <div className="space-y-4">
-                      <Label htmlFor="description" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Engineering Description</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="description" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Engineering Description</Label>
+                        <AIAssetsModal userId={userId} onInsert={(text) => setDescription(prev => prev + '\n' + text)} />
+                      </div>
                       <Textarea
                         id="description"
                         className="min-h-[200px] text-lg leading-relaxed bg-blue-50/10 border-2 border-blue-100/50 focus-visible:ring-blue-500/20 rounded-3xl p-8 transition-all resize-none"

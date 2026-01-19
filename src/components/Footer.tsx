@@ -1,5 +1,5 @@
 'use client'
-
+import * as React from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
@@ -46,6 +46,26 @@ export function Footer() {
         }
     ]
 
+
+    // System Status Logic
+    const [systemStatus, setSystemStatus] = React.useState<'checking' | 'operational' | 'degraded'>('checking')
+
+    React.useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const res = await fetch('/api/system/status')
+                if (res.ok) {
+                    setSystemStatus('operational')
+                } else {
+                    setSystemStatus('degraded')
+                }
+            } catch (e) {
+                setSystemStatus('degraded')
+            }
+        }
+        checkStatus()
+    }, [])
+
     return (
         <footer className="relative border-t bg-muted/30 pt-16 pb-8 overflow-hidden">
             {/* Decorative element */}
@@ -67,7 +87,10 @@ export function Footer() {
                             Crafted with passion for the developer community. A digital laboratory for engineering experiments and knowledge cultivation.
                         </p>
                         <div className="flex items-center gap-2 text-xs font-black text-muted-foreground uppercase tracking-widest bg-muted/50 w-fit px-3 py-1 rounded-full border">
-                            System Status: <span className="text-emerald-500 animate-pulse">Operational</span>
+                            System Status:
+                            {systemStatus === 'checking' && <span className="text-yellow-500 animate-pulse">Checking...</span>}
+                            {systemStatus === 'operational' && <span className="text-emerald-500">Operational</span>}
+                            {systemStatus === 'degraded' && <span className="text-destructive animate-pulse">Degraded</span>}
                         </div>
                     </div>
 

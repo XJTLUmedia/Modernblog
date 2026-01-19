@@ -12,9 +12,15 @@ import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { AIAssetsModal } from '@/components/ai/AIAssetsModal'
+
+import { useAuth } from '@/hooks/use-auth'
 
 export default function NewBlogPost() {
   const router = useRouter()
+  const { user } = useAuth()
+  const userId = user?.id || ""
+
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [content, setContent] = useState('')
@@ -23,6 +29,10 @@ export default function NewBlogPost() {
   const [recallQuestions, setRecallQuestions] = useState('')
   const [mnemonics, setMnemonics] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const handleAIInsert = (text: string) => {
+    setContent(prev => prev + `\n\n${text}`)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,7 +146,10 @@ export default function NewBlogPost() {
                     </div>
 
                     <div className="space-y-4">
-                      <Label htmlFor="content" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Core Substance (Markdown)</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="content" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Core Substance (Markdown)</Label>
+                        <AIAssetsModal userId={userId} onInsert={handleAIInsert} />
+                      </div>
                       <Textarea
                         id="content"
                         className="min-h-[500px] text-lg leading-relaxed bg-muted/20 border-2 border-muted focus-visible:ring-primary/20 rounded-3xl p-8 transition-all resize-none"

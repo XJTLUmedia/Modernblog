@@ -23,6 +23,13 @@ model User {
   role            String    @default("user") // Added for admin/user distinction
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
+  
+  // Settings & Profile
+  avatar                  String?
+  notificationPreferences String? // JSON
+  privacySettings         String? // JSON
+  securitySettings        String? // JSON
+
 
   // Relations
   posts           Post[]
@@ -36,6 +43,7 @@ model User {
   subscriptions   Subscription[]
   badges          UserBadge[]
   bookmarks       Bookmark[]
+  aiArtifacts     AIArtifact[]
 }
 
 // Site-wide configuration and feature toggles
@@ -381,4 +389,18 @@ model Bookmark {
   @@unique([userId, postId])
   @@unique([userId, gardenNoteId])
   @@unique([userId, projectId])
+}
+
+// AI History / Artifacts (No Mock - Real Gen)
+model AIArtifact {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // "image", "video", "web_summary", "search_result", "text"
+  prompt      String
+  content     String   // The URL (for media) or Text (for summary)
+  provider    String   // "openai", "replicate", "google", "cheerio"
+  metadata    String?  // JSON for extra details (model used, duration, etc.)
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

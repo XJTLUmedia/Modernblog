@@ -12,10 +12,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AIAssetsModal } from '@/components/ai/AIAssetsModal'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function EditBlogPost() {
   const params = useParams()
   const router = useRouter()
+  const { user } = useAuth()
+  const userId = user?.id || ""
   const id = params?.id as string
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
@@ -186,7 +190,10 @@ export default function EditBlogPost() {
                     </div>
 
                     <div className="space-y-4">
-                      <Label htmlFor="content" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Core Substance (Markdown)</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="content" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Core Substance (Markdown)</Label>
+                        <AIAssetsModal userId={userId} onInsert={(text) => setContent(prev => prev + '\n' + text)} />
+                      </div>
                       <Textarea
                         id="content"
                         className="min-h-[500px] text-lg leading-relaxed bg-muted/20 border-2 border-muted focus-visible:ring-primary/20 rounded-3xl p-8 transition-all resize-none"

@@ -13,9 +13,7 @@ export async function StatsSection() {
         db.user.count() // Using user count as a proxy for "Community Members" or similar
     ])
 
-    // Total views is a bit trickier without an aggregation table, 
-    // but let's sum them up if performant, or just use a placeholder based on real data if heavy.
-    // For now, let's Aggregate.
+    // Aggregate total views from all content types
     const postViews = await db.post.aggregate({ _sum: { viewCount: true } })
     const projectViews = await db.project.aggregate({ _sum: { viewCount: true } })
     const noteViews = await db.gardenNote.aggregate({ _sum: { viewCount: true } })

@@ -21,7 +21,7 @@ Content: ${content.slice(0, 2000)}`
             ]
         })
 
-        const jsonMatch = aiResponse.match(/\[.*\]/s)
+        const jsonMatch = aiResponse?.match(/\[[\s\S]*?\]/)
         return NextResponse.json({
             mnemonics: jsonMatch ? JSON.parse(jsonMatch[0]) : ["Forge, Sync, Deploy — The standard workflow."]
         })

@@ -32,7 +32,7 @@ Example:
         })
 
         if (aiResponse) {
-            const jsonMatch = aiResponse.match(/\[.*\]/s)
+            const jsonMatch = aiResponse?.match(/\[[\s\S]*?\]/)
             if (jsonMatch) {
                 return NextResponse.json({ questions: JSON.parse(jsonMatch[0]) })
             }

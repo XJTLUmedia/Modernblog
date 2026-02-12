@@ -71,7 +71,7 @@ Working memory has a limited capacity (about 4-7 items). Chunking allows you to 
     'method-of-loci': {
         title: 'Method of Loci',
         description: 'Spatial memory indexing using familiar architectural maps.',
-        icon: <MapPin className="h-6 w-6 text-purple-400" /> || <Sparkles className="h-6 w-6 text-purple-400" />,
+        icon: <MapPin className="h-6 w-6 text-purple-400" />,
         color: 'text-purple-400',
         bg: 'bg-purple-400/10',
         content: `

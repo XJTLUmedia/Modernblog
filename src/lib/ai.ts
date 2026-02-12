@@ -8,17 +8,42 @@ interface AICompletionOptions {
     limit?: number
 }
 
-export async function generateAIContent(options: AICompletionOptions): Promise<string | null> {
-    const apiKey = process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY
+// Log provider selection once per process (helps avoid noisy logs)
+let providerLogged = false
+let pollinationsLogged = false
+let openaiLogged = false
 
-    // Primary: Use Official Keys if available
-    if (apiKey) {
+export async function generateAIContent(options: AICompletionOptions): Promise<string | null> {
+    // NOTE:
+    // - OPENAI_API_KEY is for OpenAI's API only.
+    // - GEMINI_API_KEY (if you use it elsewhere) is NOT compatible with OpenAI endpoints.
+    const openaiKey = process.env.OPENAI_API_KEY
+
+    // Helper: fetch with a timeout so this route can't hang forever
+    const fetchWithTimeout = async (url: string, init: RequestInit, timeoutMs = 25000) => {
+        const controller = new AbortController()
+        const id = setTimeout(() => controller.abort(), timeoutMs)
         try {
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            return await fetch(url, { ...init, signal: controller.signal })
+        } finally {
+            clearTimeout(id)
+        }
+    }
+
+    // Primary: OpenAI (only if key is present)
+    if (openaiKey) {
+        if (!providerLogged || !openaiLogged) {
+            console.log('AI provider available: OpenAI (primary)')
+            providerLogged = true
+            openaiLogged = true
+        }
+
+        try {
+            const response = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${openaiKey}`
                 },
                 body: JSON.stringify({
                     model: 'gpt-4o-mini',
@@ -27,18 +52,34 @@ export async function generateAIContent(options: AICompletionOptions): Promise<s
                 })
             })
 
+            if (!response.ok) {
+                // Capture the provider's error body so failures aren't silent.
+                const errText = await response.text().catch(() => '')
+                throw new Error(`OpenAI API error: ${response.status} - ${errText}`)
+            }
+
             const data = await response.json()
-            return data.choices?.[0]?.message?.content || null
+            return data.choices?.[0]?.message?.content ?? null
         } catch (error) {
             console.error('AI API Error (Primary):', error)
-            // Fallthrough to fallback
+            // Fallthrough to Pollinations as a fallback
+            if (!pollinationsLogged) {
+                console.log('AI provider fallback: Pollinations.ai (OpenAI-compatible)')
+                pollinationsLogged = true
+            }
+        }
+    } else {
+        // No OpenAI key: Pollinations is the selected provider (not a fallback)
+        if (!providerLogged || !pollinationsLogged) {
+            console.log('AI provider selected: Pollinations.ai (free; no OPENAI_API_KEY set)')
+            providerLogged = true
+            pollinationsLogged = true
         }
     }
 
-    // Fallback: Pollinations.ai (OpenAI Compatible Endpoint)
-    console.log('Using Pollinations.ai fallback (OpenAI-compatible)')
+    // Pollinations.ai (OpenAI Compatible Endpoint)
     try {
-        const response = await fetch('https://text.pollinations.ai/openai', {
+        const response = await fetchWithTimeout('https://text.pollinations.ai/openai', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -51,12 +92,12 @@ export async function generateAIContent(options: AICompletionOptions): Promise<s
         })
 
         if (!response.ok) {
-            const errText = await response.text();
+            const errText = await response.text().catch(() => '')
             throw new Error(`Pollinations API error: ${response.status} - ${errText}`)
         }
 
         const data = await response.json()
-        return data.choices?.[0]?.message?.content || null
+        return data.choices?.[0]?.message?.content ?? null
     } catch (fallbackError) {
         console.error('AI API Error (Fallback):', fallbackError)
         return null

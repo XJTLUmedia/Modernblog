@@ -19,7 +19,7 @@ Content: ${content.slice(0, 2000)}`
             ]
         })
 
-        const jsonMatch = aiResponse.match(/\[.*\]/s)
+        const jsonMatch = aiResponse?.match(/\[[\s\S]*?\]/)
         return NextResponse.json({
             chunks: jsonMatch ? JSON.parse(jsonMatch[0]) : ["Core Logic", "Data Interface", "UI Engine"]
         })

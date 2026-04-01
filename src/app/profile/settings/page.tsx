@@ -7,15 +7,16 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import {
     User as UserIcon, Shield,
-    ArrowLeft, Bell, Lock
+    ArrowLeft, Bell, Lock, Key
 } from 'lucide-react'
 import Link from 'next/link'
 import { ProfileForm } from '@/components/settings/ProfileForm'
 import { NotificationSettings } from '@/components/settings/NotificationSettings'
 import { PrivacySettings } from '@/components/settings/PrivacySettings'
 import { SecuritySettings } from '@/components/settings/SecuritySettings'
+import { ApiKeySettings } from '@/components/settings/ApiKeySettings'
 
-type SettingsTab = 'profile' | 'notifications' | 'privacy' | 'security'
+type SettingsTab = 'profile' | 'notifications' | 'privacy' | 'security' | 'api-keys'
 
 export default function SettingsPage() {
     const { user, loading, authenticated, refresh } = useAuth()
@@ -44,6 +45,7 @@ export default function SettingsPage() {
         { id: 'notifications', label: 'Notifications', icon: Bell },
         { id: 'privacy', label: 'Privacy & Data', icon: Shield },
         { id: 'security', label: 'Security', icon: Lock },
+        { id: 'api-keys', label: 'API Keys', icon: Key },
     ]
 
     return (
@@ -101,6 +103,7 @@ export default function SettingsPage() {
                                     {activeTab === 'notifications' && <NotificationSettings user={user} />}
                                     {activeTab === 'privacy' && <PrivacySettings />}
                                     {activeTab === 'security' && <SecuritySettings />}
+                                    {activeTab === 'api-keys' && <ApiKeySettings />}
                                 </motion.div>
                             </AnimatePresence>
                         </div>

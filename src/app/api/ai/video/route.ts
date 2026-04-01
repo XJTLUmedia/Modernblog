@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import Replicate from "replicate";
-
-const replicate = new Replicate({
-    auth: process.env.REPLICATE_API_TOKEN,
-});
+import { resolveApiKey } from "@/lib/api-keys";
 
 export async function POST(request: NextRequest) {
     try {
@@ -12,10 +9,13 @@ export async function POST(request: NextRequest) {
 
         if (!prompt) return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
 
-        if (!process.env.REPLICATE_API_TOKEN) {
-            // Fallback or Error
+        const replicateToken = await resolveApiKey(userId, 'REPLICATE_API_TOKEN');
+
+        if (!replicateToken) {
             return NextResponse.json({ error: "Server Configuration Error: Missing Replicate Token" }, { status: 500 });
         }
+
+        const replicate = new Replicate({ auth: replicateToken });
 
         // Using Zeroscope v2 XL which is text-to-video
         const videoOutput = await replicate.run(

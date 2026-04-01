@@ -14,9 +14,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-# Dummy sqlite DB url to satisfy Prisma at build time
-ENV DATABASE_URL="file:./dev.db"
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# DB provider: override with --build-arg PRISMA_PROVIDER=postgresql for Postgres builds
+ARG PRISMA_PROVIDER=sqlite
+ENV PRISMA_PROVIDER=${PRISMA_PROVIDER}
+# Dummy URL for build-time prisma generate (runtime URL comes from .env / env vars)
+ENV DATABASE_URL="file:./dev.db"
 
 RUN npm run build
 
@@ -37,8 +41,9 @@ COPY --from=builder /app/public ./public
 # ✅ add this
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy prisma files + entrypoint
+# Copy prisma files + scripts + entrypoint
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
 USER nextjs

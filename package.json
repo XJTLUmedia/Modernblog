@@ -3,12 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "db:provider": "node scripts/set-prisma-provider.mjs",
     "dev": "next dev -p 3000",
-    "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
+    "build": "node scripts/set-prisma-provider.mjs && prisma generate && next build",
+    "postinstall": "node scripts/set-prisma-provider.mjs && prisma generate",
     "start": "next start",
     "lint": "next lint",
-    "migrate:deploy": "prisma migrate deploy"
+    "db:push": "node scripts/set-prisma-provider.mjs && prisma db push",
+    "db:migrate": "node scripts/set-prisma-provider.mjs && prisma migrate deploy",
+    "db:generate": "node scripts/set-prisma-provider.mjs && prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

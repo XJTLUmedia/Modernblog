@@ -6,6 +6,7 @@
 interface AICompletionOptions {
     messages: { role: 'user' | 'assistant' | 'system'; content: string }[]
     limit?: number
+    userId?: string
 }
 
 // Log provider selection once per process (helps avoid noisy logs)
@@ -17,7 +18,18 @@ export async function generateAIContent(options: AICompletionOptions): Promise<s
     // NOTE:
     // - OPENAI_API_KEY is for OpenAI's API only.
     // - GEMINI_API_KEY (if you use it elsewhere) is NOT compatible with OpenAI endpoints.
-    const openaiKey = process.env.OPENAI_API_KEY
+    let openaiKey = process.env.OPENAI_API_KEY
+
+    // Check user-specific key if userId provided
+    if (options.userId) {
+        try {
+            const { resolveApiKey } = await import('@/lib/api-keys')
+            const userKey = await resolveApiKey(options.userId, 'OPENAI_API_KEY')
+            if (userKey) openaiKey = userKey
+        } catch {
+            // Fall through to env var
+        }
+    }
 
     // Helper: fetch with a timeout so this route can't hang forever
     const fetchWithTimeout = async (url: string, init: RequestInit, timeoutMs = 25000) => {

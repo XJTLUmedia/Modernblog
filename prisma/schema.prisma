@@ -32,6 +32,7 @@ model User {
   notificationPreferences String?
   privacySettings         String?
   securitySettings        String?
+  apiKeys                 String?
 
   // Relations
   posts             Post[]

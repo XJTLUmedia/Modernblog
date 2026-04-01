@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { resolveApiKeys } from "@/lib/api-keys";
 
 function getCustomSearch() {
     const { google } = require("googleapis");
@@ -12,14 +13,16 @@ export async function POST(request: NextRequest) {
 
         if (!query) return NextResponse.json({ error: "Query is required" }, { status: 400 });
 
-        if (!process.env.GOOGLE_API_KEY || !process.env.GOOGLE_CX) {
+        const keys = await resolveApiKeys(userId, ['GOOGLE_API_KEY', 'GOOGLE_CX']);
+
+        if (!keys.GOOGLE_API_KEY || !keys.GOOGLE_CX) {
             return NextResponse.json({ error: "Server Configuration Error: Missing Google Search Keys" }, { status: 500 });
         }
 
         const res = await getCustomSearch().cse.list({
-            cx: process.env.GOOGLE_CX,
+            cx: keys.GOOGLE_CX,
             q: query,
-            auth: process.env.GOOGLE_API_KEY,
+            auth: keys.GOOGLE_API_KEY,
             num: 5 // Top 5 results
         });
 

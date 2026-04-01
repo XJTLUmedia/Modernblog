@@ -1,30 +1,19 @@
-const { PrismaClient } = require('@prisma/client')
+/**
+ * Prisma client generation helper.
+ * Runs provider detection + prisma generate.
+ * Usage: node generate-prisma.mjs
+ */
+import { execSync } from 'child_process';
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-    }
-  }
-})
+try {
+  console.log('Setting Prisma provider...');
+  execSync('node scripts/set-prisma-provider.mjs', { stdio: 'inherit' });
 
-async function main() {
-  try {
-    console.log('Generating Prisma Client...')
+  console.log('Generating Prisma Client...');
+  execSync('npx prisma generate', { stdio: 'inherit' });
 
-    // Test connection
-    await prisma.$connect()
-    console.log('✅ Database connection successful')
-
-    // Generate client
-    const result = await prisma.$generateClient()
-    console.log('✅ Prisma Client generated')
-
-    await prisma.$disconnect()
-  } catch (error) {
-    console.error('❌ Error generating Prisma Client:', error)
-    process.exit(1)
-  }
+  console.log('✅ Prisma Client generated');
+} catch (error) {
+  console.error('❌ Error generating Prisma Client:', error.message);
+  process.exit(1);
 }
-
-main()

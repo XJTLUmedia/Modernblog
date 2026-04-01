@@ -27,7 +27,7 @@ export default function AIStudioPage() {
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...body, userId: user?.id })
+                body: JSON.stringify(body)
             })
 
             const data = await res.json()

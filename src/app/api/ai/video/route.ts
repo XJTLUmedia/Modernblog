@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
         // Save to AI History
         if (userId) {
-            await prisma.aiArtifact.create({
+            await prisma.aIArtifact.create({
                 data: {
                     userId,
                     type: 'video',

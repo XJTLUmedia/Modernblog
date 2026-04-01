@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAI() {
+    return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         const systemPrompt = "You are a helpful AI assistant for a personal blog. Generate content in Markdown format.";
         const fullPrompt = context ? `Context:\n${context}\n\nTask: ${prompt}` : prompt;
 
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: "gpt-4o", // or gpt-4-turbo or gpt-3.5-turbo
             messages: [
                 { role: "system", content: systemPrompt },

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
         // Save retrieval to history
         if (userId) {
-            await prisma.aiArtifact.create({
+            await prisma.aIArtifact.create({
                 data: {
                     userId,
                     type: 'web_summary',

@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+        if (!user.password) return NextResponse.json({ error: "Account uses external login, no password to change" }, { status: 400 });
 
         const valid = await bcrypt.compare(currentPassword, user.password);
         if (!valid) return NextResponse.json({ error: "Incorrect current password" }, { status: 400 });

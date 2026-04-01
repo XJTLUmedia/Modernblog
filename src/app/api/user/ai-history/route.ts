@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const history = await prisma.aiArtifact.findMany({
+        const history = await prisma.aIArtifact.findMany({
             where: { userId },
             orderBy: { createdAt: 'desc' },
             take: 50

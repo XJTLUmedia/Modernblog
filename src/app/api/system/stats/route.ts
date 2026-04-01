@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
         const [postsCount, notesCount, projectsCount] = await Promise.all([
             prisma.post.count({ where: { published: true } }),
             prisma.gardenNote.count(),
-            prisma.project.count({ where: { published: true } })
+            prisma.project.count()
         ]);
 
         // Calculate total stats

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAI() {
+    return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -17,20 +17,20 @@ export async function POST(request: NextRequest) {
         }
 
         // Call DALL-E 3
-        const response = await openai.images.generate({
+        const response = await getOpenAI().images.generate({
             model: "dall-e-3",
             prompt: prompt,
             n: 1,
             size: "1024x1024",
         });
 
-        const imageUrl = response.data[0].url;
+        const imageUrl = response.data?.[0]?.url;
 
         if (!imageUrl) throw new Error("No image generated");
 
         // Save to AI History (DB)
         if (userId) {
-            await prisma.aiArtifact.create({
+            await prisma.aIArtifact.create({
                 data: {
                     userId,
                     type: 'image',

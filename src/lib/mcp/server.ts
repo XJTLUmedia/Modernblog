@@ -4,8 +4,8 @@
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { ApiClient } from "./client.js";
-import { ALL_TOOLS, type ToolDef } from "./tools.js";
+import { ApiClient } from "./client";
+import { ALL_TOOLS, type ToolDef } from "./tools";
 
 export interface McpServerBundle {
   server: McpServer;

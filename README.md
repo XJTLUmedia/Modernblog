@@ -92,6 +92,108 @@ npm run dev
 
 The application will be accessible at `http://localhost:3000`.
 
+---
+
+## MCP Server — Control Your Blog with AI
+
+ModernBlog ships with a built-in **MCP (Model Context Protocol) server** that turns your entire blog into a set of AI-callable tools. This means any MCP-compatible AI assistant — VS Code Copilot, Claude Desktop, Cursor, or custom agents — can read, write, and manage your blog through natural conversation.
+
+### Why Use MCP?
+
+| Benefit | Description |
+|---------|-------------|
+| **Conversational Blogging** | Draft, edit, and publish posts by talking to your AI assistant — no dashboard clicking required. |
+| **AI-Powered Workflows** | Chain tools together: generate a draft → summarize → publish → share. All in one conversation. |
+| **Full Admin Control** | Manage posts, projects, garden notes, hub content, and site settings entirely through AI tools. |
+| **Secure Multi-User Auth** | Regular users and admins get separate permission levels. Admin tools are blocked for non-admin sessions. |
+| **Session Introspection** | `auth_whoami` instantly shows your current login state — no guessing if you're authenticated. |
+| **63 Tools, Zero Config** | Every API endpoint is exposed as a named tool with typed inputs. The AI knows exactly what's available. |
+
+### Quick Setup
+
+```bash
+cd mcp-server
+npm install
+npm run build
+```
+
+### VS Code / GitHub Copilot
+
+A `.vscode/mcp.json` is already included. Just open the project in VS Code and the MCP server is available to Copilot automatically:
+
+```json
+{
+  "servers": {
+    "personal-blog": {
+      "command": "npx",
+      "args": ["tsx", "${workspaceFolder}/mcp-server/src/index.ts"],
+      "env": {
+        "BLOG_API_URL": "http://localhost:3000"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "personal-blog": {
+      "command": "node",
+      "args": ["/path/to/personal_blog/mcp-server/dist/index.js"],
+      "env": {
+        "BLOG_API_URL": "https://your-blog.com"
+      }
+    }
+  }
+}
+```
+
+### How It Works
+
+1. **Start a session** — The AI calls `auth_login` with your credentials. Session cookies are stored automatically.
+2. **Use any tool** — Ask the AI to list posts, create a garden note, update settings, etc. Each tool maps to one API endpoint.
+3. **Admin tools are gated** — If you login as a regular user, admin-only tools (create post, manage settings) return a clear "insufficient privileges" error. Login with an admin account to unlock them.
+4. **Check your session** — Call `auth_whoami` at any time to see if you're logged in, what role you have, and whether admin tools are available.
+
+### Available Tool Categories
+
+| Category | Examples | Access |
+|----------|----------|--------|
+| **System** | `health_check`, `system_status`, `system_stats` | Public |
+| **Auth** | `auth_login`, `auth_logout`, `auth_whoami`, `auth_check` | Public |
+| **Posts** | `list_posts`, `get_post`, `react_to_post` | Public / Auth |
+| **Projects** | `list_projects`, `get_project` | Public |
+| **Garden** | `list_garden_notes`, `get_garden_note` | Public |
+| **Comments** | `list_comments`, `create_comment` | Auth |
+| **AI Services** | `ai_text_generate`, `ai_web_search`, `ai_mnemonic_generate`, ... | Mixed |
+| **User** | `get_user_profile`, `update_user_profile`, `toggle_bookmark`, ... | Auth |
+| **Admin** | `admin_create_post`, `admin_update_hub`, `admin_update_settings`, ... | Admin |
+
+> Full tool reference with input schemas is available in [`mcp-server/SKILL.md`](mcp-server/SKILL.md).
+
+### Example Conversation
+
+```
+You:   "Login to my blog as admin@example.com"
+AI:    → calls auth_login → "Logged in as admin@example.com (admin)"
+
+You:   "Create a new post about TypeScript generics"
+AI:    → calls admin_create_post → "Post created: TypeScript Generics 101"
+
+You:   "Now summarize it"
+AI:    → calls summarize_post → returns a 3-sentence summary
+
+You:   "Who am I logged in as?"
+AI:    → calls auth_whoami → "admin@example.com, role: admin, isAdmin: true"
+```
+
+---
+
 ### 4. Future Consideration
 
 I still lack of ideas on how to integrate (AI image and AI video into summary and reflection part). Therefore, although there are AI generation tool there, it is not fully functional.

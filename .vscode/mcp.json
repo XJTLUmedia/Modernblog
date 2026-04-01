@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "personal-blog": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "${workspaceFolder}/mcp-server/src/index.ts"],
+      "env": {
+        "BLOG_API_URL": "http://localhost:3000"
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { postId } = body
+    const userId = request.cookies.get('user_id')?.value
 
     if (!postId) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
@@ -32,7 +33,8 @@ export async function POST(request: NextRequest) {
           role: 'user',
           content: `Summarize this post:\nTitle: ${post.title}\nContent: ${post.content}`
         }
-      ]
+      ],
+      userId,
     })
 
     if (!aiSummary) {

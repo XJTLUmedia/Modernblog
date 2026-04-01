@@ -4,6 +4,7 @@ import { generateAIContent } from '@/lib/ai'
 export async function POST(request: NextRequest) {
     try {
         const { title, content } = await request.json()
+        const userId = request.cookies.get('user_id')?.value
 
         const systemPrompt = `You are a "System Architect". 
 Decompose the following project into 3-4 high-level "Architectural Chunks" (logical modules).
@@ -16,7 +17,8 @@ Content: ${content.slice(0, 2000)}`
             messages: [
                 { role: 'system', content: 'You are a technical JSON assistant.' },
                 { role: 'user', content: systemPrompt }
-            ]
+            ],
+            userId,
         })
 
         const jsonMatch = aiResponse?.match(/\[[\s\S]*?\]/)

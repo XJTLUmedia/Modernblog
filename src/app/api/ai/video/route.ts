@@ -5,7 +5,8 @@ import { resolveApiKey } from "@/lib/api-keys";
 
 export async function POST(request: NextRequest) {
     try {
-        const { prompt, userId } = await request.json();
+        const { prompt } = await request.json();
+        const userId = request.cookies.get('user_id')?.value;
 
         if (!prompt) return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
 

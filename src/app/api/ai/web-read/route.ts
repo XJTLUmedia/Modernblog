@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
     try {
-        const { url, userId } = await request.json();
+        const { url } = await request.json();
+        const userId = request.cookies.get('user_id')?.value;
 
         if (!url) return NextResponse.json({ error: "URL is required" }, { status: 400 });
 

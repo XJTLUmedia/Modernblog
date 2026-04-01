@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { question, answer, context } = body;
+    const userId = request.cookies.get('user_id')?.value;
 
     if (!question || !answer) {
       return NextResponse.json(
@@ -34,6 +35,7 @@ Instructions:
         { role: "system", content: systemPrompt },
         { role: "user", content: "Provide the feedback." },
       ],
+      userId,
     });
 
     console.log("[verify] feedback type:", typeof feedback);

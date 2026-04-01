@@ -2,26 +2,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
-
-function getOpenAI() {
-    return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-}
+import { resolveApiKey } from "@/lib/api-keys";
 
 export async function POST(request: NextRequest) {
     try {
-        const { prompt, userId, context } = await request.json();
+        const { prompt, context } = await request.json();
+        const userId = request.cookies.get('user_id')?.value;
 
         if (!prompt) return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
 
-        if (!process.env.OPENAI_API_KEY) {
-            return NextResponse.json({ error: "Server Configuration Error: Missing OpenAI Key" }, { status: 500 });
+        const openaiKey = await resolveApiKey(userId, 'OPENAI_API_KEY');
+
+        if (!openaiKey) {
+            return NextResponse.json({ error: "No OpenAI API key available. Please configure your key in Settings → API Keys." }, { status: 500 });
         }
+
+        const openai = new OpenAI({ apiKey: openaiKey });
 
         const systemPrompt = "You are a helpful AI assistant for a personal blog. Generate content in Markdown format.";
         const fullPrompt = context ? `Context:\n${context}\n\nTask: ${prompt}` : prompt;
 
-        const response = await getOpenAI().chat.completions.create({
-            model: "gpt-4o", // or gpt-4-turbo or gpt-3.5-turbo
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: fullPrompt }
@@ -37,9 +39,9 @@ export async function POST(request: NextRequest) {
         if (userId) {
             await prisma.aIArtifact.create({
                 data: {
-                    userId,
+                    userId: userId,
                     type: 'text',
-                    prompt, // Store original prompt, not full context to save space? Or full? Let's stick to prompt.
+                    prompt,
                     content: generatedText,
                     provider: 'openai',
                     metadata: JSON.stringify({ model: 'gpt-4o' })

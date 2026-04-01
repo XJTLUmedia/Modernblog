@@ -6,6 +6,7 @@
     "db:provider": "node scripts/set-prisma-provider.mjs",
     "dev": "next dev -p 3000",
     "build": "node scripts/set-prisma-provider.mjs && prisma generate && next build",
+    "build:cloudflare": "opennextjs-cloudflare build",
     "postinstall": "node scripts/set-prisma-provider.mjs && prisma generate",
     "start": "next start",
     "lint": "next lint",

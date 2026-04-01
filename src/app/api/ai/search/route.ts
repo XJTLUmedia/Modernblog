@@ -9,7 +9,8 @@ function getCustomSearch() {
 
 export async function POST(request: NextRequest) {
     try {
-        const { query, userId } = await request.json();
+        const { query } = await request.json();
+        const userId = request.cookies.get('user_id')?.value;
 
         if (!query) return NextResponse.json({ error: "Query is required" }, { status: 400 });
 

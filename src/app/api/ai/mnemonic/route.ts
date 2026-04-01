@@ -4,6 +4,7 @@ import { generateAIContent } from '@/lib/ai'
 export async function POST(request: NextRequest) {
     try {
         const { title, content } = await request.json()
+        const userId = request.cookies.get('user_id')?.value
 
         const systemPrompt = `You are a "Memory Engineer". 
 Create ONE high-impact mnemonic or "Memory Anchor" phrase that encapsulates the core purpose of this project.
@@ -18,7 +19,8 @@ Content: ${content.slice(0, 2000)}`
             messages: [
                 { role: 'system', content: 'You are a helpful JSON assistant.' },
                 { role: 'user', content: systemPrompt }
-            ]
+            ],
+            userId,
         })
 
         const jsonMatch = aiResponse?.match(/\[[\s\S]*?\]/)

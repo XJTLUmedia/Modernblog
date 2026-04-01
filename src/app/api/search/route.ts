@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { query, history = [], limit = 10 } = body
+    const userId = request.cookies.get('user_id')?.value
 
     if (!query || query.trim().length === 0) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 })
@@ -112,7 +113,8 @@ ${contextText}`
           { role: 'system', content: 'You are a helpful JSON-speaking technical assistant.' },
           ...history.map((h: any) => ({ role: h.role, content: h.content })),
           { role: 'user', content: systemPrompt }
-        ]
+        ],
+        userId,
       })
 
       if (aiResponse) {

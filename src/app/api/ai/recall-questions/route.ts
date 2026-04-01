@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
         const { title, content } = body
+        const userId = request.cookies.get('user_id')?.value
 
         if (!title || !content) {
             return NextResponse.json({ error: 'Title and content are required' }, { status: 400 })
@@ -28,7 +29,8 @@ Example:
             messages: [
                 { role: 'system', content: 'You are a helpful JSON-speaking assistant.' },
                 { role: 'user', content: systemPrompt }
-            ]
+            ],
+            userId,
         })
 
         if (aiResponse) {

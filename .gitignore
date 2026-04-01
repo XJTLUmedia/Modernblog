@@ -50,3 +50,7 @@ server.log
 # Local dev artifacts
 data/
 *.old
+
+# OpenNext / Cloudflare
+.open-next
+.dev.vars

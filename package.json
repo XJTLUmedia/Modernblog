@@ -8,11 +8,15 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
-    "migrate:deploy": "prisma migrate deploy"
+    "migrate:deploy": "prisma migrate deploy",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@prisma/adapter-d1": "^7.6.0",
     "@prisma/client": "^6.x",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
@@ -74,6 +78,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.18.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^25.0.3",
     "@types/react": "^19",
@@ -83,13 +88,12 @@
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.79.0"
   },
   "overrides": {
     "cross-spawn": "^7.0.5",
-    "brace-expansion": "^2.0.2",
-    "diff": "^8.0.3",
-    "glob": "^11.1.0"
+    "diff": "^8.0.3"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

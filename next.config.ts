@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
 
   serverExternalPackages: [
+    "@prisma/client",
+    ".prisma/client",
     "googleapis",
     "@modelcontextprotocol/sdk",
     "openai",
@@ -59,3 +61,6 @@ const nextConfig: NextConfig = {
 }
 
 export default nextConfig
+
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare"
+initOpenNextCloudflareForDev()

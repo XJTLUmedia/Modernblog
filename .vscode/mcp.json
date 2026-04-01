@@ -3,10 +3,14 @@
     "personal-blog": {
       "type": "stdio",
       "command": "npx",
-      "args": ["tsx", "${workspaceFolder}/mcp-server/src/index.ts"],
+      "args": ["tsx", "${workspaceFolder}/scripts/mcp-stdio.ts"],
       "env": {
         "BLOG_API_URL": "http://localhost:3000"
       }
+    },
+    "personal-blog-http": {
+      "type": "http",
+      "url": "http://localhost:3000/personal-blog-mcp-server"
     }
   }
 }

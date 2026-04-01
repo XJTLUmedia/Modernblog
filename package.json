@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@prisma/client": "^6.x",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",

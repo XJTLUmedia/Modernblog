@@ -96,7 +96,16 @@ The application will be accessible at `http://localhost:3000`.
 
 ## MCP Server — Control Your Blog with AI
 
-ModernBlog ships with a built-in **MCP (Model Context Protocol) server** that turns your entire blog into a set of AI-callable tools. This means any MCP-compatible AI assistant — VS Code Copilot, Claude Desktop, Cursor, or custom agents — can read, write, and manage your blog through natural conversation.
+ModernBlog ships with a built-in **MCP (Model Context Protocol) server** integrated directly into the Next.js application. Any MCP-compatible AI assistant — VS Code Copilot, Claude Desktop, Cursor, or custom agents — can read, write, and manage your blog through natural conversation.
+
+### Two Transport Modes
+
+| Mode | Endpoint | Use Case |
+|------|----------|----------|
+| **HTTP (Streamable)** | `http://localhost:3000/personal-blog-mcp-server` | Remote clients, web-based agents, multi-session |
+| **Stdio** | `npx tsx scripts/mcp-stdio.ts` | VS Code, Claude Desktop, local dev |
+
+Both modes share the same 63 tools and auth system via the shared code in `src/lib/mcp/`.
 
 ### Why Use MCP?
 
@@ -111,25 +120,29 @@ ModernBlog ships with a built-in **MCP (Model Context Protocol) server** that tu
 
 ### Quick Setup
 
+No separate install needed — the MCP server is part of the main project. Just start the Next.js app:
+
 ```bash
-cd mcp-server
 npm install
-npm run build
+npm run dev    # MCP HTTP endpoint is live at /personal-blog-mcp-server
 ```
 
 ### VS Code / GitHub Copilot
 
-A `.vscode/mcp.json` is already included. Just open the project in VS Code and the MCP server is available to Copilot automatically:
+A `.vscode/mcp.json` is already included with both transport modes:
 
 ```json
 {
   "servers": {
     "personal-blog": {
+      "type": "stdio",
       "command": "npx",
-      "args": ["tsx", "${workspaceFolder}/mcp-server/src/index.ts"],
-      "env": {
-        "BLOG_API_URL": "http://localhost:3000"
-      }
+      "args": ["tsx", "${workspaceFolder}/scripts/mcp-stdio.ts"],
+      "env": { "BLOG_API_URL": "http://localhost:3000" }
+    },
+    "personal-blog-http": {
+      "type": "http",
+      "url": "http://localhost:3000/personal-blog-mcp-server"
     }
   }
 }
@@ -143,8 +156,8 @@ Add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "personal-blog": {
-      "command": "node",
-      "args": ["/path/to/personal_blog/mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["tsx", "/path/to/personal_blog/scripts/mcp-stdio.ts"],
       "env": {
         "BLOG_API_URL": "https://your-blog.com"
       }
@@ -174,7 +187,7 @@ Add to your `claude_desktop_config.json`:
 | **User** | `get_user_profile`, `update_user_profile`, `toggle_bookmark`, ... | Auth |
 | **Admin** | `admin_create_post`, `admin_update_hub`, `admin_update_settings`, ... | Admin |
 
-> Full tool reference with input schemas is available in [`mcp-server/SKILL.md`](mcp-server/SKILL.md).
+> Full tool reference with input schemas is available in [`mcp-server/SKILL.md`](mcp-server/SKILL.md). MCP source code lives in `src/lib/mcp/`.
 
 ### Example Conversation
 

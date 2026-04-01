@@ -12,47 +12,13 @@ datasource db {
 
 // User model for authentication and user management
 model User {
-<<<<<<< Updated upstream
-  id              String    @id @default(cuid())
-  email           String    @unique
-  password        String    // Hashed password for authentication
-  name            String?
-  bio             String?
-  website         String?
-  resetToken      String?   // Password reset token
-  resetTokenExpires DateTime? // Token expiration time
-  role            String    @default("user") // Added for admin/user distinction
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  
-  // Settings & Profile
-  avatar                  String?
-  notificationPreferences String? // JSON
-  privacySettings         String? // JSON
-  securitySettings        String? // JSON
-
-
-  // Relations
-  posts           Post[]
-  gardenNotes     GardenNote[]
-  projects        Project[]
-  comments        Comment[]
-  guestbookEntries GuestbookEntry[]
-  reactions       Reaction[]
-  followers       Follow[]       @relation("UserFollowers")
-  following       Follow[]       @relation("UserFollowing")
-  subscriptions   Subscription[]
-  badges          UserBadge[]
-  bookmarks       Bookmark[]
-  aiArtifacts     AIArtifact[]
-=======
   id                String    @id @default(cuid())
   email             String    @unique
   password          String?
   googleId          String?   @unique
 
   name              String?
-  avatar            String?   // ← add this
+  avatar            String?
   bio               String?
   website           String?
 
@@ -62,7 +28,12 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  // Relations...
+  // Settings & Profile
+  notificationPreferences String?
+  privacySettings         String?
+  securitySettings        String?
+
+  // Relations
   posts             Post[]
   gardenNotes       GardenNote[]
   projects          Project[]
@@ -74,7 +45,7 @@ model User {
   subscriptions     Subscription[]
   badges            UserBadge[]
   bookmarks         Bookmark[]
->>>>>>> Stashed changes
+  aiArtifacts       AIArtifact[]
 }
 
 // Site-wide configuration and feature toggles

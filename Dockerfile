@@ -16,6 +16,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Dummy sqlite DB url to satisfy Prisma at build time
 ENV DATABASE_URL="file:./dev.db"
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN npm run build
 

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
 import { prisma } from "@/lib/prisma";
 
-const customsearch = google.customsearch("v1");
+function getCustomSearch() {
+    const { google } = require("googleapis");
+    return google.customsearch("v1");
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,7 +16,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Server Configuration Error: Missing Google Search Keys" }, { status: 500 });
         }
 
-        const res = await customsearch.cse.list({
+        const res = await getCustomSearch().cse.list({
             cx: process.env.GOOGLE_CX,
             q: query,
             auth: process.env.GOOGLE_API_KEY,

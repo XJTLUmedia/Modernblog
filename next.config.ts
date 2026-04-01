@@ -3,6 +3,15 @@ import type { NextConfig } from "next"
 const nextConfig: NextConfig = {
   output: "standalone",
 
+  serverExternalPackages: [
+    "googleapis",
+    "@modelcontextprotocol/sdk",
+    "openai",
+    "bcryptjs",
+    "replicate",
+    "cheerio",
+  ],
+
   async headers() {
     return [
       {

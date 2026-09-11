@@ -1,5 +1,4 @@
 
----
 
 # ModernBlog: AI blog for you to review your knowledge
 
@@ -70,7 +69,7 @@ npx prisma db push
 
 ```
 
-Create admin account:
+Create admin account (requires `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`):
 
 ```bash
 npx prisma db seed
@@ -217,9 +216,4 @@ If you would like to contribute, think about improving this part. I would be dee
 
 
 
-
-
-
-
 ---
-
